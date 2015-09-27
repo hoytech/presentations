@@ -73,7 +73,9 @@ Many applications require generating random strings:
 
 * Session tokens in web-apps
 * Password-reset codes
-* Shuffling
+* Distributed unique IDs
+* Cryptographic nonces
+* Shuffling large amounts of data
 * Monte-carlo simulations
 
 </script></section>
@@ -93,7 +95,7 @@ How do *you* do it?
 
 ## UUIDs: Universally Unique IDentifiers
 
-* None of the "U"s stand for unpredictable
+* None of the "U"s stand for *unpredictable*
 * Different versions of UUIDs include predictable things like timestamps, MAC addresses, namespaces, etc.
 * Only version 4 is fully random (except how good is your implementation?)
 
@@ -114,7 +116,7 @@ This looks very randomy:
 
 But hash functions are deterministic
 
-Security depends completely on the entropy and unpredictability of the input &mdash; in this case, perl's rand()
+Security depends completely on the unpredictability and entropy of the input &mdash; in this case, perl's rand()
 
 </script></section>
 
@@ -133,7 +135,7 @@ Security depends completely on the entropy and unpredictability of the input &md
 
 Not good for session tokens:
 * Seeded with only 4 bytes!
-* Probably a predictable LCRG, can recover seed after seeing at most a few tokens
+* Probably a predictable LCRG, attacker can recover seed after seeing at most a few tokens
 
 </script></section>
 
@@ -188,7 +190,7 @@ Not good for session tokens:
 
 # Session::Token
 
-But I wasn't happy with any of them, so I wrote `Session::Token`
+But I wasn't happy with any of them
 
 * Secure
   * Seeded from `/dev/urandom`
@@ -224,16 +226,18 @@ But I wasn't happy with any of them, so I wrote `Session::Token`
 
 # Alphabets
 
-The alphabet is the set of letters possible in a token
+The alphabet is the set of letters allowed in a token.
 
-Default Session::Token alphabet is uppercase letters, lowercase letters, and digits, but this is flexible:
-
-      say Session::Token->new(alphabet => "012345")->get;
-      ## 23344133423321253410420155022221550145111422355434
+By default, upper and lower-case letters and digits
 
 * Base 62 
 * No "wacky" characters to cause encoding/escaping problems like with base64
 * Can always select tokens by double-clicking on them
+
+Alphabet is customisable:
+
+      say Session::Token->new(alphabet => "012345")->get;
+      ## 23344133423321253410420155022221550145111422355434
 
 </script></section>
 
@@ -256,10 +260,10 @@ Any non-power-of-2 alphabet size must be careful not to introduce *mod bias*
 
 # Re-roll algorithm
 
-The solution to mod bias is simple: If a generated value is outside range, throw it away and get another.
+There is a simple solution to mod bias: If a value is outside your range, throw it away and get another.
 
 * Consider generating a number from 1 to 5 using a single die &mdash; re-roll if a ⚅ comes up
-* Efficient: Default tokens consume 1.0323 bytes for every output byte
+* Efficient: In base-62, tokens consume 1.0323 bytes for every output byte
 
 </script></section>
 
@@ -312,6 +316,8 @@ Don't take my word for it. Neil Bowers did a third party comparison:
 
 http://neilb.org/reviews/passwords.html
 
+(and I've made it about 40% faster since)
+
 </script></section>
 
 
@@ -320,7 +326,7 @@ http://neilb.org/reviews/passwords.html
 
 # App::Session::Token
 
-There is a command-line app called `session-token` which is convenient for shell scripts and things:
+Convenient command-line app `session-token` for shell scripts and things:
 
     $ session-token 
     1MpdJtwm3Rn0JtQgvB6cVh
