@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+
+    <title>Session::Token</title>
+
+    <meta name="description" content="Secure, efficient, simple random session token generation">
+    <meta name="author" content="Doug Hoyte">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <link rel="stylesheet" href="../reveal.js/css/reveal.css">
+    <link rel="stylesheet" href="../reveal.js/css/theme/black.css" id="theme">
+
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="../reveal.js/lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+      var link = document.createElement( 'link' );
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = window.location.search.match( /print-pdf/gi ) ? '../reveal.js/css/print/pdf.css' : '../reveal.js/css/print/paper.css';
+      document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="../reveal.js/lib/js/html5shiv.js"></script>
+    <![endif]-->
+
+    <style>
+      .reveal .slides h1, .reveal .slides h2, .reveal .slides h3 {
+        text-transform: none;
+      }
+
+      .two-column {
+        display: flex;
+        flex-wrap: wrap;
+      }
+
+      .two-column em {
+        margin: 20px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="reveal">
+      <div class="slides">
+
+<!------------------------------------------------------->
+
+<section data-markdown><script type="text/template">
+
+# Session::Token
+
+### Secure, efficient, simple
+
+Doug Hoyte
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+# Random Tokens
+
+Many applications require generating random strings:
+
+* Session tokens in web-apps
+* Password-reset codes
+* Shuffling
+* Monte-carlo simulations
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+# Audience Survey
+
+How do *you* do it?
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## UUIDs: Universally Unique IDentifiers
+
+* None of the "U"s stand for unpredictable
+* Different versions of UUIDs include predictable things like timestamps, MAC addresses, namespaces, etc.
+* Only version 4 is fully random (except how good is your implementation?)
+
+<span>de305d54-75b4-</span><span style="color:red">4</span>31b-adb2-eb6b9e546014
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Non-solution: Hash functions
+
+This looks very randomy:
+
+    $ perl -MDigest::MD5=md5_hex -E 'say md5_hex(rand())'
+    924ca9e44be6bd96035974f9041fe750
+
+But hash functions are deterministic
+
+Security depends completely on the entropy and unpredictability of the input &mdash; in this case, perl's rand()
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## So how good is perl's rand() anyway?
+
+    $ strace perl -e rand
+    ...
+    open("/dev/urandom", O_RDONLY)          = 3
+    read(3, "\254\256\331\262", 4)          = 4
+    close(3)                                = 0
+    ...
+
+Not good for session tokens:
+* Seeded with only 4 bytes!
+* Probably a predictable LCRG, can recover seed after seeing at most a few tokens
+
+</script></section>
+
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## /dev/urandom
+
+* Good source of randomness
+* Almost universally available nowadays
+
+      char buffer[TOKEN_SIZE];
+      int fd = open("/dev/urandom", O_RDONLY);
+      read(fd, buffer, sizeof(buffer));
+      close(fd);
+
+<span class="fragment" style="font-style: italic">Oops! Forgot to error check open() call &mdash; If it fails then tokens are just whatever happened to be in uninitialized memory</span>
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Tons of CPAN modules for this task
+
+<div class="two-column">
+* String::Random
+* Data::Random
+* App::Genpass
+* String::MkPasswd
+* UUID
+* Crypt::RandPasswd
+* Crypt::GeneratePassword
+* Data::SimplePassword
+* Data::Token
+* UUID::Tiny
+* Bytes::Random::Secure
+* String::Urandom
+* Math::Random::Secure
+* Crypt::URandom
+</div>
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Session::Token
+
+But I wasn't happy with any of them, so I wrote `Session::Token`
+
+* Secure
+  * Seeded from `/dev/urandom`
+  * Uses ISAAC, a cryptographic pseudo-random number generator
+* Efficient
+  * No system calls needed to generate token
+* Simple
+  * You have to go out of your way to use insecurely
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Very simple interface
+
+    use Session::Token;
+
+    my $generator = Session::Token->new;
+ 
+    my $token = $generator->get;
+    ## bu4EXqWt5nEeDjTAZcbTKY
+ 
+    my $token2 = $generator->get;
+    ## 4Vez56Zc7el5Ggx4PoXCNL
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Alphabets
+
+The alphabet is the set of letters possible in a token
+
+Default Session::Token alphabet is uppercase letters, lowercase letters, and digits, but this is flexible:
+
+      say Session::Token->new(alphabet => "012345")->get;
+      ## 23344133423321253410420155022221550145111422355434
+
+* Base 62 
+* No "wacky" characters to cause encoding/escaping problems like with base64
+* Can always select tokens by double-clicking on them
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+# Mod bias
+
+Any non-power-of-2 alphabet size must be careful not to introduce mod bias:
+
+![Mod bias diagram](modbias.svg)
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Re-roll algorithm
+
+The solution to mod bias is simple: If a generated value is outside range, throw it away and get another.
+
+* Consider generating a number from 1 to 5 using a single die &mdash; re-roll if a ⚅ comes up
+* Efficient: Default tokens consume 1.0323 bytes for every output byte
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Token length
+
+The default tokens contain at minimum 128-bits of entropy, although you can customise this:
+
+    say Session::Token->new(entropy => 50)->get;
+    ## FTGv4Ktch
+
+    say Session::Token->new(entropy => 256)->get;
+    ## 45vbS9BwvA6oaQRDRgMF1MUqXIueoYIjU9crgdgiP3i
+
+Or specify a length directly:
+
+    say Session::Token->new(length => 4)->get;
+    ## znBY
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+# Variable-length tokens
+
+Session::Token tokens are always the same length
+
+Variable length tokens have a number of problems:
+
+* Log files don't line up nicely on screen
+* Less storage efficient (you also must store length)
+* Possibly leaks information via side-channel (if token length can be inferred from ciphertext length)
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+# Efficient
+
+Don't take my word for it. Neil Bowers did a third party comparison:
+
+<blockquote>
+  Impressive figures for Session::Token — an order of magnitude faster than the next fastest module.
+</blockquote>
+
+http://neilb.org/reviews/passwords.html
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# App::Session::Token
+
+There is a command-line app called `session-token` which is convenient for shell scripts and things:
+
+    $ session-token 
+    1MpdJtwm3Rn0JtQgvB6cVh
+
+    $ session-token -n 5 --alphabet ACGT --length 10
+    GTGTACCAGT
+    TTCTTGGCCA
+    CCCTGGCCCT
+    CGTAGGCTAT
+    ACAAAGGAGT
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Questions?
+
+### Get it on CPAN:
+
+* `Session::Token`
+* `App::Session::Token`
+
+</script></section>
+
+<!------------------------------------------------------->
+
+
+      </div>
+
+    </div>
+
+    <script src="../reveal.js/lib/js/head.min.js"></script>
+    <script src="../reveal.js/js/reveal.js"></script>
+
+    <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        transition: 'none', // none/fade/slide/convex/concave/zoom
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: '../reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../reveal.js/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+        ]
+      });
+
+    </script>
+
+  </body>
+</html>
