@@ -204,7 +204,7 @@ But I wasn't happy with any of them, so I wrote `Session::Token`
 
 <section data-markdown><script type="text/template">
 
-# Very simple interface
+# Simple
 
     use Session::Token;
 
@@ -244,7 +244,7 @@ Default Session::Token alphabet is uppercase letters, lowercase letters, and dig
 
 # Mod bias
 
-Any non-power-of-2 alphabet size must be careful not to introduce mod bias:
+Any non-power-of-2 alphabet size must be careful not to introduce *mod bias*
 
 ![Mod bias diagram](modbias.svg)
 
