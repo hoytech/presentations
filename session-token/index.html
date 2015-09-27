@@ -148,7 +148,7 @@ Not good for session tokens:
 ## /dev/urandom
 
 * Good source of randomness
-* Almost universally available nowadays
+* Almost standard nowadays (except for windows)
 
       char buffer[TOKEN_SIZE];
       int fd = open("/dev/urandom", O_RDONLY);
@@ -263,7 +263,8 @@ Any non-power-of-2 alphabet size must be careful not to introduce *mod bias*
 There is a simple solution to mod bias: If a value is outside your range, throw it away and get another.
 
 * Consider generating a number from 1 to 5 using a single die &mdash; re-roll if a ⚅ comes up
-* Efficient: In base-62, tokens consume 1.0323 bytes for every output byte
+* Efficient: In base-62, for every output byte, the number of random bytes needed is:
+  `64/62 ≅ 1.0323`
 
 </script></section>
 
