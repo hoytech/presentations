@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+
+    <title>Session::Token</title>
+
+    <meta name="description" content="Secure, efficient, simple random session token generation">
+    <meta name="author" content="Doug Hoyte">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <link rel="stylesheet" href="../reveal.js/css/reveal.css">
+    <link rel="stylesheet" href="../reveal.js/css/theme/black.css" id="theme">
+
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="../reveal.js/lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+      var link = document.createElement( 'link' );
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = window.location.search.match( /print-pdf/gi ) ? '../reveal.js/css/print/pdf.css' : '../reveal.js/css/print/paper.css';
+      document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="../reveal.js/lib/js/html5shiv.js"></script>
+    <![endif]-->
+
+    <style>
+      .reveal .slides h1, .reveal .slides h2, .reveal .slides h3 {
+        text-transform: none;
+      }
+
+      .two-column {
+        display: flex;
+        flex-wrap: wrap;
+      }
+
+      .two-column em {
+        margin: 20px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="reveal">
+      <div class="slides">
+
+<!------------------------------------------------------->
+
+<section data-markdown><script type="text/template">
+
+# FM Demodulation with RTL-SDR
+
+Doug Hoyte
+
+VE3HOY
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+# What are you talking about?
+
+* **SDR**: Stands for *Software-Defined Radio*. It is where raw-radio samples are processed by your computer with software, kind of like a "sound-card for RF data".
+
+* **RTL**: Short for *Realtek RTL2832U* and clones. A few years ago some hackers figured out these cheap chips used for satellite TV dongles could be turned into cheap SDR devices.
+
+
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Open radio device
+
+      use Radio::RTLSDR;
+
+      my $freq = shift || 104.5;
+      $freq *= 1_000_000;
+
+      my $rf_sample_rate = 2_000_000;
+
+      my $radio = Radio::RTLSDR->new(freq => $freq,
+                                     sample_rate => $rf_sample_rate);
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Open audio device
+
+### SOX
+
+      open(my $audio_sink,
+           '|-:raw',
+           "play -t raw -r $audio_sample_rate -e float -b 32 -c 1 -");
+
+### or pulse audio
+
+      open(my $audio_sink,
+           '|-:raw',
+           "pacat --stream-name fmrecv --format float32le --rate $audio_sample_rate --channels 1 --latency-msec 10");
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Receive callback
+
+      $radio->rx(sub {
+        # process raw radio samples in $_[0]...
+      });
+
+      $radio->run; # enter event loop
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+# Prepare data
+
+      use PDL;
+
+      my $data = pdl()->convert(byte)->reshape(length($_[0]));
+
+      ${ $data->get_dataref } = $_[0];
+      $data->upd_data();
+
+      $data = $data->convert(float);
+
+      $data -= 128;
+      $data *= 1000000;
+
+      my $I = $data->slice([0,-1,2]);
+      my $Q = $data->slice([1,-1,2]);
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+# RF filter
+
+      ## Decimate 4:1, 2000k -> 500k
+
+      $I = PDL::DSP::Fir::Simple::filter($I, { fc => 0.12, N => 81, });
+      $Q = PDL::DSP::Fir::Simple::filter($Q, { fc => 0.12, N => 81, });
+
+      $I = $I->slice([0,-1,4]);
+      $Q = $Q->slice([0,-1,4]);
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+# FM demodulation
+
+      use PDL::Complex;
+
+      my $prev = $I->slice([0, -2]) + (i * $Q->slice([0, -2]));
+      my $curr = $I->slice([1, -1]) + (i * $Q->slice([1, -1]));
+
+      my $deriv = ($prev->Cconj() * $curr)->Carg();
+
+      ## FIXME: retain previous values:
+      $deriv = $deriv->append($deriv->at(-1));
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+# Audio filter
+
+      my $audio =
+        PDL::DSP::Fir::Simple::filter($deriv, { fc => 0.4, N => 32 });
+
+      $audio = $audio->slice([0,-1,10]);
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Send to audio sink
+
+      print $audio_sink ${ $audio->convert(float)->get_dataref };
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+# So... how does it sound?
+
+      $ perl fmrecv.pl 104.5
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Questions/comments?
+
+I'm designing a perl-based Software-Defined Radio toolkit, would love your help:
+
+https://github.com/hoytech/Radio-RTLSDR
+
+You can get an RTL-SDR for about $20 from http://www.nooelec.com
+
+</script></section>
+
+<!------------------------------------------------------->
+
+
+      </div>
+
+    </div>
+
+    <script src="../reveal.js/lib/js/head.min.js"></script>
+    <script src="../reveal.js/js/reveal.js"></script>
+
+    <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        transition: 'none', // none/fade/slide/convex/concave/zoom
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: '../reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../reveal.js/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+        ]
+      });
+
+    </script>
+
+  </body>
+</html>
