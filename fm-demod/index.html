@@ -3,9 +3,8 @@
   <head>
     <meta charset="utf-8">
 
-    <title>Session::Token</title>
+    <title>FM Demodulation with RTL-SDR</title>
 
-    <meta name="description" content="Secure, efficient, simple random session token generation">
     <meta name="author" content="Doug Hoyte">
 
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -69,9 +68,9 @@ VE3HOY
 
 # What are you talking about?
 
-* **SDR**: Stands for *Software-Defined Radio*. It is where raw-radio samples are processed by your computer with software, kind of like a "sound-card for RF data".
+* **SDR**: Stands for *Software-Defined Radio*. It is where raw-radio samples are processed by your computer with software, kind of like a "sound-card for radio data".
 
-* **RTL**: Short for *Realtek RTL2832U* and clones. A few years ago some hackers figured out these cheap chips used for satellite TV dongles could be turned into cheap SDR devices.
+* **RTL**: Short for *Realtek RTL2832U* and clones. A few years ago some hackers figured out these cheap chips used for digital TV dongles could be turned into SDR devices.
 
 
 
@@ -101,7 +100,9 @@ VE3HOY
 
 # Open audio device
 
-### SOX
+      my $audio_sample_rate = 50_000;
+
+### sox
 
       open(my $audio_sink,
            '|-:raw',
@@ -122,10 +123,13 @@ VE3HOY
 # Receive callback
 
       $radio->rx(sub {
-        # process raw radio samples in $_[0]...
+        # process raw radio samples in $_[0]
+        # this callback will be called several times per second...
       });
 
       $radio->run; # enter event loop
+
+The rest of the code in this presentation lives inside this `rx` callback...
 
 </script></section>
 
@@ -199,7 +203,7 @@ VE3HOY
 
 <section data-markdown><script type="text/template">
 
-# Send to audio sink
+# Send audio to speakers
 
       print $audio_sink ${ $audio->convert(float)->get_dataref };
 
