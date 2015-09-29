@@ -71,7 +71,7 @@ Doug Hoyte
 
 Many applications require generating random strings:
 
-* Session tokens in web-apps
+* Session tokens in web-apps, APIs, etc
 * Password-reset codes
 * Distributed unique IDs
 * Cryptographic nonces
@@ -147,7 +147,7 @@ Not good for session tokens:
 
 ## /dev/urandom
 
-* Good source of randomness
+* Good source of randomness, must convert into tokens somehow
 * Almost standard nowadays (except for windows)
 
       char buffer[TOKEN_SIZE];
@@ -155,7 +155,7 @@ Not good for session tokens:
       read(fd, buffer, sizeof(buffer));
       close(fd);
 
-<span class="fragment" style="font-style: italic">Oops! Forgot to error check open() call &mdash; If it fails then tokens are just whatever happened to be in uninitialized memory</span>
+<span class="fragment" style="font-style: italic; color: #e00">Oops! Forgot to error check open() call &mdash; If it fails then buffer is just uninitialized memory</span>
 
 </script></section>
 
