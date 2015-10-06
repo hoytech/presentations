@@ -13,7 +13,7 @@ use PDL::Graphics::Gnuplot;
 
   $w->options(key => 'bmargin', );
 
-  $w->plot({ with => 'lines', lt => 1, lc => 1, legend => 'frequency = 0.2' },
+  $w->plot({ with => 'lines', lt => 1, lc => 1, legend => 'frequency = ' . $freq },
            $x, sin($freq * 2 * PI * $x));
 
 
@@ -27,8 +27,8 @@ use PDL::Graphics::Gnuplot;
 
   $x = sequence(10000) / 1000;
 
-  $w->replot({ with => 'lines', lt => 1, lc => 8, legend => 'frequency = 0.8' },
-             $x, sin((0.8 * 2 * PI * $x) + PI));
+  $w->replot({ with => 'lines', lt => 1, lc => 8, legend => 'frequency = ' . (1 - $freq) },
+             $x, sin(((1 - $freq) * 2 * PI * $x) + PI));
 
 
   $w->close();

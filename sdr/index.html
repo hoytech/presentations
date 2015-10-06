@@ -83,7 +83,8 @@ GQRX is a radio receiver
 
 * Built on GNU Radio (more on this later)
 * Waterfall shows signal strength by frequency over time
-  FIXME: image
+
+![Waterfall](waterfall.png)
 
 </script></section>
 
@@ -101,7 +102,7 @@ Sampling is the process of taking measurements of a continuous signal at evenly 
 
 <section data-markdown><script type="text/template">
 
-We also have discrete measurement values since we use digital computers
+Since we use digital computers, measurement values are also discrete
 
 ![Sampling 2](sampling2.svg)
 
@@ -110,7 +111,7 @@ We also have discrete measurement values since we use digital computers
 
 <section data-markdown><script type="text/template">
 
-So we aren't recording what happens between samples, and are only approximately recording values
+We aren't recording what happens between samples, and are only approximately recording these samples
 
 ![Sampling 3](sampling3.svg)
 
@@ -151,7 +152,7 @@ Aliases also occur above the sample rate
 
 <section data-markdown><script type="text/template">
 
-Slightly less obviously, aliases also occur at negative frequencies
+And even at negative frequencies
 
 ![Aliasing 3](aliasing3.svg)
 
@@ -160,12 +161,100 @@ Slightly less obviously, aliases also occur at negative frequencies
 
 <section data-markdown><script type="text/template">
 
-It's best to think about the frequency spectrum as a circle
+Think of the sampled frequency spectrum as a circle
 
 ![Aliasing 4](aliasing4.svg)
 
 </script></section>
 
+
+
+<section data-markdown><script type="text/template">
+
+# SDR perl module
+
+      use SDR;
+
+      my $radio = SDR->radio(can => "rx");
+
+      $radio->frequency(97_300_000);
+      $radio->sample_rate(2_000_000);
+
+      $radio->rx(sub {
+        ## process samples in $_[0]
+        ## called several times per second -- be fast!
+      });
+
+      $radio->run; ## enter event loop
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Transmitting
+
+      use SDR;
+
+      my $radio = SDR->radio(can => "tx");
+
+      $radio->frequency(97_300_000);
+      $radio->sample_rate(2_000_000);
+
+      $radio->tx(sub {
+        ## return perl reference to $_[0] bytes of samples
+        ## called several times per second -- be fast!
+      });
+
+      $radio->run; ## enter event loop 
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+So, how do we make our callbacks fast?
+
+# Perl Data Language
+
+* Loop over large amounts of data efficiently
+* Like matlab, numpy
+* Multi-core capable
+* Learn more: http://pdl.perl.org/
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## PDL lets you work with arrays like they were simple perl variables
+
+      use PDL;
+
+      my $x = sequence(10);
+      print $x;
+      ## [0 1 2 3 4 5 6 7 8 9]
+
+      print $x + 100;
+      ## [100 101 102 103 104 105 106 107 108 109]
+
+      print cos($x);
+      ## [1 0.54030231 -0.41614684 -0.9899925 ... ]
+
+      use PDL::Complex;
+      print $x + (2 * i);
+      ## [0 +2i  1 +2i  2 +2i  3 +2i  4 +2i ... ]
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+# IQ Samples
+
+</script></section>
 
 
 <!--
@@ -176,9 +265,8 @@ gqrx
   - waterfall
 
 sampling
-  - IQ samples
   - aliasing
-  - bandwidth
+  - IQ samples
 
 SDR
   - tx
@@ -204,6 +292,7 @@ rc car demo
 complex baseband
   - negative frequency
   - sidebands
+  - bandwidth
 
 fm receiver demo
   - decimation/interpolation
