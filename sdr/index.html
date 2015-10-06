@@ -68,7 +68,7 @@ Amateur radio: VE3HOY
 
 * Computers are fast enough now that things that used to be implemented in hardware can now be done in software
 
-* Much more flexible: One simple device can support many protocols, modulations, and frequencies
+* Flexible: One simple device can support many protocols, modulations, and frequencies
 
 * A "sound card for radio"
 
@@ -256,7 +256,23 @@ PDL lets you work with arrays like simple perl variables
 
 # IQ Samples
 
+FIXME
+
 </script></section>
+
+
+<section data-markdown><script type="text/template">
+
+# HackRF
+
+http://greatscottgadgets.com/hackrf/
+
+![HackRF One](hackrf.jpg)
+
+1 MHz - 6 GHz frequency range, 20M samples/sec, ~$300
+
+</script></section>
+
 
 
 <section data-markdown><script type="text/template">
@@ -348,10 +364,267 @@ Only the phase is changing, not the frequency, so why does it click? We'll come 
 To frequency modulate the carrier, we just need to adjust its phase using the signal we want to transmit:
 
       my $tone_freq = 1000;
+      my $tone_amplitude = 50;
 
-      my $tone = 50 * sin(2 * PI * ($tone_freq/$sample_rate) * $time);
+      my $tone = sin(2 * PI * ($tone_freq/$sample_rate) * $time);
+      $tone *= $tone_amplitude;
 
       my $signal = cos($radians + $tone) + i * sin($radians + $tone);
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# GNU Radio
+
+http://gnuradio.org/
+
+![GNU Radio Companion](gnuradio.png)
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## GNU Radio is the gold standard for open-source SDR
+
+* Supports tons of SDR devices, modulations, protocols, etc
+* Efficient at most tasks
+* User-friendly GUI
+* Very large community
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Demo 4: GNU Radio
+
+Let's use GNU Radio to reverse-engineer the protocol used by a simple remote-control car
+
+![Coke can RC car](rccar.jpg)
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Although very cool, GNU Radio is not ideal for every task
+
+* Hundreds of packages and dependencies
+  * Too heavy weight for simple apps/demos
+* No middle-ground level of abstraction:
+  * Either connect high-level blocks with the GUI or Python scripts
+  * Or dive into the super-optimised C++/assembly
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Demo 5: Drive RC car from perl
+
+        my @message = ( qw(1 1 1 0) x 4,
+                        qw(1 0) x $pulses );
+
+        my $signal = rld(ones(scalar @message)
+                           * $pulse_width * $sample_rate,
+                         pdl(@message));
+
+        my $radians = sequence($signal->getdim(0))
+                      * 2 * PI * ($freq_offset/$sample_rate);
+
+        my $carrier = cos($radians) + (i * sin($radians));
+
+        my $product = $signal * $carrier;
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## Sample rate conversion
+
+* Decimation
+* Interpolation
+
+</script></section>
+ 
+
+<section data-markdown><script type="text/template">
+
+# RTL-SDR
+
+http://sdr.osmocom.org/trac/wiki/rtl-sdr
+
+![RTL-SDR](rtlsdr.jpg)
+
+Specs vary: 25 Mhz - 1.7 GHz, 2.5M samples/sec, ~$20
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# FM Reception
+
+Let's try to receive an FM broadcast.
+
+    my $freq = shift || 104.5;
+    $freq *= 1_000_000;
+
+    my $rf_sample_rate = 2_000_000;
+    my $audio_sample_rate = 50_000;
+
+    my $radio = SDR->radio(can => 'rx');
+
+    $radio->frequency($freq);
+    $radio->sample_rate($rf_sample_rate);
+
+    my $audio_sink = SDR->audio_sink(
+                       sample_rate => $audio_sample_rate,
+                       format => 'float',
+                     );
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## Prepare the data
+
+      $radio->rx(sub {
+        my $data = pdl()->convert(byte)->reshape(length($_[0]));
+
+        ${ $data->get_dataref } = $_[0];
+        $data->upd_data();
+
+        $data = $data->convert(float);
+
+        $data -= 128;
+        $data *= 1_000_000;
+
+        my $I = $data->slice([0,-1,2]);
+        my $Q = $data->slice([1,-1,2]);
+
+        ## rest of the code goes here...
+      });
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## RF filter stage
+
+Decimate 4:1 (2M -> 500K samples/sec):
+
+      $I = PDL::DSP::Fir::Simple::filter($I, { fc => 0.12, N => 81, });
+      $Q = PDL::DSP::Fir::Simple::filter($Q, { fc => 0.12, N => 81, });
+
+      $I = $I->slice([0,-1,4]);
+      $Q = $Q->slice([0,-1,4]);
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## FM demodulation
+
+      use PDL::Complex;
+
+      my $prev = $I->slice([0, -2]) + (i * $Q->slice([0, -2]));
+      my $curr = $I->slice([1, -1]) + (i * $Q->slice([1, -1]));
+
+      my $deriv = ($prev->Cconj() * $curr)->Carg();
+
+      ## FIXME: retain previous values:
+      $deriv = $deriv->append($deriv->at(-1));
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Audio filter stage
+
+Decimate 10:1 (500K -> 50K samples/sec):
+
+      my $audio =
+        PDL::DSP::Fir::Simple::filter($deriv, { fc => 0.4, N => 32 });
+
+      $audio = $audio->slice([0,-1,10]);
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Send audio to speakers
+
+      print $audio_sink ${ $audio->convert(float)->get_dataref };
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Demo 6: So... how does it sound?
+
+      $ perl fmrecv.pl 104.5
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+# Digital modulation
+
+* Amplitude-Shift Keying
+  * "On-off keying"
+* Frequency-Shift Keying
+* Phase-Shift Keying
+  * PSK-31
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+# Varicode
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+# Demo 7: Fldigi
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Questions?
+
+* CPAN modules:
+  * [SDR](https://metacpan.org/pod/SDR)
+  * [SDR::Radio::HackRF](https://metacpan.org/pod/SDR::Radio::HackRF)
+  * [SDR::Radio::RTLSDR](https://metacpan.org/pod/SDR::Radio::RTLSDR)
+* Github: https://github.com/hoytech/
+* This presentation: http://hoytech.github.io/presentations/sdr/
 
 </script></section>
 
