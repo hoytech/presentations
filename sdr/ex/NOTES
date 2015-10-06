@@ -1,0 +1,11 @@
+SSB demo:
+
+perl tx_clicks.pl 14000000 251000
+perl tx_no_clicks.pl 14000000 251000
+
+FM demo:
+
+perl tx_clicks.pl 103000000 100000
+perl tx_no_clicks.pl 103000000 100000
+
+perl tx_fm_tone.pl 103000000 100000

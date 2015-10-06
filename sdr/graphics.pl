@@ -33,3 +33,23 @@ use PDL::Graphics::Gnuplot;
 
   $w->close();
 }
+
+
+
+{
+  my $w = gpwin('svg', output => 'gen/phase-discontinuity.svg', size => [ 1000, 350, ], );
+
+  $w->options(border => 0, xtics => 0, ytics => 0);
+
+  my $x = sequence(1000) / 100;
+
+  my $cut = 5;
+  my $freq = 1.8;
+
+  my $signal = ($x < $cut) * sin($freq * $x) + ($x >= $cut) * sin(($freq * $x) - $cut);
+
+  $w->plot({ with => 'lines', lt => 1, lc => 1, },
+           $x, $signal);
+
+  $w->close();
+}

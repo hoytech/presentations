@@ -173,6 +173,8 @@ Think of the sampled frequency spectrum as a circle
 
 # SDR perl module
 
+Simple receiver
+
       use SDR;
 
       my $radio = SDR->radio(can => "rx");
@@ -193,7 +195,7 @@ Think of the sampled frequency spectrum as a circle
 
 <section data-markdown><script type="text/template">
 
-# Transmitting
+Transmitting is just as easy
 
       use SDR;
 
@@ -229,7 +231,7 @@ So, how do we make our callbacks fast?
 
 <section data-markdown><script type="text/template">
 
-## PDL lets you work with arrays like they were simple perl variables
+PDL lets you work with arrays like simple perl variables
 
       use PDL;
 
@@ -255,6 +257,104 @@ So, how do we make our callbacks fast?
 # IQ Samples
 
 </script></section>
+
+
+<section data-markdown><script type="text/template">
+
+# Demo 2: SSB transmission
+
+      $radio->tx(sub {
+        my $block_size = shift;
+
+        my $time = sequence($block_size / 2);
+
+        my $radians = 2 * PI * ($freq / $sample_rate) * $time;
+
+        my $signal = cos($radians) + i * sin($radians);
+
+        $signal += 128 + (128 * i);
+ 
+        return $signal->byte->flat->get_dataref;
+      });
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+The clicking sound comes from abrupt phase changes &mdash; we aren't keeping track of the signal's phase between blocks
+
+![Phase Discontinuity](gen/phase-discontinuity.svg)
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+# Fix the clicking
+
+      my $curr_sample = 0;
+
+      $radio->tx(sub {
+        my $block_size = shift;
+
+        my $time = sequence($block_size / 2) + $curr_sample;
+        $curr_sample += $block_size / 2;
+
+        my $radians = 2 * PI * ($freq / $sample_rate) * $time;
+
+        my $signal = cos($radians) + i * sin($radians);
+
+        $signal += 128 + (128 * i);
+
+        return $signal->byte->flat->get_dataref;
+      });
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Demo 3: FM transmission
+
+Try the no-clicking script and listen to it with an FM radio
+
+* It's an unmodulated carrier so there is no tone
+* But all the noise goes away: *full-quieting*
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Let's try that clicking demo with an FM receiver instead
+
+<div class="fragment">
+**It still clicks!**
+
+Only the phase is changing, not the frequency, so why does it click? We'll come back to this...
+</div>
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Play a tone over FM
+
+To frequency modulate the carrier, we just need to adjust its phase using the signal we want to transmit:
+
+      my $tone_freq = 1000;
+
+      my $tone = 50 * sin(2 * PI * ($tone_freq/$sample_rate) * $time);
+
+      my $signal = cos($radians + $tone) + i * sin($radians + $tone);
+
+</script></section>
+
 
 
 <!--
