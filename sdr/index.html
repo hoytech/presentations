@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+
+    <title>Software-defined radio with PDL, HackRF, and RTL-SDR</title>
+
+    <meta name="author" content="Doug Hoyte">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <link rel="stylesheet" href="../reveal.js/css/reveal.css">
+    <link rel="stylesheet" href="../reveal.js/css/theme/white.css" id="theme">
+
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="../reveal.js/lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+      var link = document.createElement( 'link' );
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = window.location.search.match( /print-pdf/gi ) ? '../reveal.js/css/print/pdf.css' : '../reveal.js/css/print/paper.css';
+      document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="../reveal.js/lib/js/html5shiv.js"></script>
+    <![endif]-->
+
+    <style>
+      .reveal .slides h1, .reveal .slides h2, .reveal .slides h3 {
+        text-transform: none;
+      }
+
+      .reveal .slides img {
+        border: 0;
+        box-shadow: none;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="reveal">
+      <div class="slides">
+
+<!------------------------------------------------------->
+
+<section data-markdown><script type="text/template">
+
+# Software-defined radio with PDL, HackRF, and RTL-SDR
+
+### Doug Hoyte
+
+CPAN: FRACTAL
+
+Amateur radio: VE3HOY
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+# Software-defined radio
+
+* Computers are fast enough now that things that used to be implemented in hardware can now be done in software
+
+* Much more flexible: One simple device can support many protocols, modulations, and frequencies
+
+* A "sound card for radio"
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+# Demo 1: GQRX
+
+GQRX is a radio receiver
+
+* Built on GNU Radio (more on this later)
+* Waterfall shows signal strength by frequency over time
+  FIXME: image
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+# Sampling
+
+Sampling is the process of taking measurements of a continuous signal at evenly spaced periods of time
+
+![Sampling 1](sampling1.svg)
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+We also have discrete measurement values since we use digital computers
+
+![Sampling 2](sampling2.svg)
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+So we aren't recording what happens between samples, and are only approximately recording values
+
+![Sampling 3](sampling3.svg)
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Aliasing
+
+* All collections of discrete samples are ambiguous
+* Each represents an infinte number of continuous signals (aliases)
+
+![Aliased Sines](gen/aliased-sines.svg)
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+Aliases occur as mirror images around half the sampling rate (the "nyquist frequency")
+
+![Aliasing 1](aliasing1.svg)
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+Aliases also occur above the sample rate
+
+![Aliasing 2](aliasing2.svg)
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+Slightly less obviously, aliases also occur at negative frequencies
+
+![Aliasing 3](aliasing3.svg)
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+It's best to think about the frequency spectrum as a circle
+
+![Aliasing 4](aliasing4.svg)
+
+</script></section>
+
+
+
+<!--
+
+intro
+
+gqrx
+  - waterfall
+
+sampling
+  - IQ samples
+  - aliasing
+  - bandwidth
+
+SDR
+  - tx
+  - rx
+
+PDL
+
+transmitter demo
+  - SSB signal
+    - phase discontinuity
+    - how to fix it
+  - FM carrier
+    - full quieting
+    - modulate a tone
+    ? module music
+
+gnu radio
+  - rev eng RC car protocol
+
+rc car demo
+  - code walk-through
+
+complex baseband
+  - negative frequency
+  - sidebands
+
+fm receiver demo
+  - decimation/interpolation
+  - code walk-through
+
+phase modulation
+  - PSK-31
+  - constellations
+  - varicode
+    - fibonacci codes
+  - frequency is derivative of phase
+  - fldigi
+
+-->
+
+
+
+
+
+
+<!------------------------------------------------------->
+
+
+      </div>
+
+    </div>
+
+    <script src="../reveal.js/lib/js/head.min.js"></script>
+    <script src="../reveal.js/js/reveal.js"></script>
+
+    <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        transition: 'none', // none/fade/slide/convex/concave/zoom
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: '../reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../reveal.js/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+        ]
+      });
+
+    </script>
+
+  </body>
+</html>
