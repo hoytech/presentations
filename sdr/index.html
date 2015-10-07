@@ -111,7 +111,7 @@ Since we use digital computers, measurement values are also discrete
 
 <section data-markdown><script type="text/template">
 
-We aren't recording what happens between samples, and are only approximately recording these samples
+We don't record what happens between samples, and only approximately record the amplitudes
 
 ![Sampling 3](sampling3.svg)
 
@@ -446,15 +446,51 @@ Let's use GNU Radio to reverse-engineer the protocol used by a simple remote-con
 </script></section>
 
 
+
 <section data-markdown><script type="text/template">
 
 ## Sample rate conversion
 
-* Decimation
-* Interpolation
+Often we need to change a sample rate, for example between RF and audio sample rates
+
+![Sample Rate Conversions](sample-rate-conversions.svg)
 
 </script></section>
+
+
  
+<section data-markdown><script type="text/template">
+
+**Upsampling** is the addition of N zero-valued samples between each sample:
+
+![Upsampling](upsampling.svg)
+
+      sub upsample {
+        my ($signal, $n) = @_;
+
+        return $signal->reshape($signal->getdim(0), $n)
+                      ->transpose
+                      ->flat;
+      }
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+**Downsampling** is the removal of every Nth sample:
+
+![Downsampling](downsampling.svg)
+
+      sub downsample {
+        my ($signal, $n) = @_;
+
+        return $signal->slice([0, -1, $n]);
+      }
+
+</script></section>
+
+
 
 <section data-markdown><script type="text/template">
 
@@ -523,13 +559,14 @@ Let's try to receive an FM broadcast.
 
 ## RF filter stage
 
-Decimate 4:1 (2M -> 500K samples/sec):
+First we do a 4:1 decimation which filters out neighbouring stations
 
-      $I = PDL::DSP::Fir::Simple::filter($I, { fc => 0.12, N => 81, });
-      $Q = PDL::DSP::Fir::Simple::filter($Q, { fc => 0.12, N => 81, });
+      ## Decimate 4:1, 2000k -> 500k
 
-      $I = $I->slice([0,-1,4]);
-      $Q = $Q->slice([0,-1,4]);
+      $I = SDR::DSP::decimate($I, 4, { fc => 0.12, N => 30, });
+      $Q = SDR::DSP::decimate($Q, 4, { fc => 0.12, N => 30, });
+
+The `fc` and `N` args are options to our low-pass filter: [PDL::DSP::Fir::Simple](https://metacpan.org/pod/PDL::DSP::Fir::Simple)
 
 </script></section>
 
@@ -557,20 +594,15 @@ Decimate 4:1 (2M -> 500K samples/sec):
 
 ## Audio filter stage
 
-Decimate 10:1 (500K -> 50K samples/sec):
+Filter out frequencies outside audio range, and bring sample rate down to match our audio sink's sample rate
 
-      my $audio =
-        PDL::DSP::Fir::Simple::filter($deriv, { fc => 0.4, N => 32 });
+      ## Decimate 10:1, 500k -> 50k
 
-      $audio = $audio->slice([0,-1,10]);
+      my $audio = SDR::DSP::decimate($deriv,
+                                     10,
+                                     { fc => 0.4, N => 20 });
 
-</script></section>
-
-
-
-<section data-markdown><script type="text/template">
-
-## Send audio to speakers
+Finally, send audio to speakers
 
       print $audio_sink ${ $audio->convert(float)->get_dataref };
 
