@@ -43,10 +43,10 @@ use PDL::Graphics::Gnuplot;
 
   my $x = sequence(1000) / 100;
 
-  my $cut = 5;
-  my $freq = 1.8;
+  my $cut = 4.7;
+  my $freq = 2;
 
-  my $signal = ($x < $cut) * sin($freq * $x) + ($x >= $cut) * sin(($freq * $x) - $cut);
+  my $signal = ($x < $cut) * cos($freq * $x) + ($x >= $cut) * cos($freq * ($x- $cut));
 
   $w->plot({ with => 'lines', lt => 1, lc => 1, },
            $x, $signal);

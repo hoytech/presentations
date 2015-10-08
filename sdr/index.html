@@ -273,7 +273,7 @@ PDL lets you work with arrays like simple perl variables
 
 # Negative frequencies
 
-When represented as complex numbers, all real (non-complex) signals must have negative frequencies that are symmetric around 0 hertz:
+All real signals have negative frequencies that are symmetric around 0 hertz (this is why AM signals have "side-bands"):
 
 ![Real spectrum](baseband1.svg)
 
@@ -510,7 +510,7 @@ Often we need to change a sample rate, for example between RF and audio sample r
 
 <section data-markdown><script type="text/template">
 
-**Downsampling** is the removal of all except the Nth samples:
+**Downsampling** is where you remove all samples except every Nth sample:
 
 ![Downsampling](downsampling.svg)
 
@@ -625,6 +625,17 @@ Compute the difference in phase angle between subsequent samples
 </script></section>
 
 
+<section data-markdown><script type="text/template">
+
+Frequency is the derivative of phase
+
+This is why we heard clicking earlier
+
+FIXME
+
+</script></section>
+
+
 
 <section data-markdown><script type="text/template">
 
@@ -655,29 +666,28 @@ Finally, send audio to speakers
 </script></section>
 
 
+
+
 <section data-markdown><script type="text/template">
 
-# Digital modulation
+# Amateur radio
 
-* Amplitude-Shift Keying
-  * "On-off keying"
-* Frequency-Shift Keying
-* Phase-Shift Keying
-  * PSK-31
+Hams have been doing SDR for a long time with just sound cards, for example PSK-31 contacts:
+
+![FLDigi](fldigi.png)
 
 </script></section>
 
 
-<section data-markdown><script type="text/template">
-
-# Varicode
-
-</script></section>
 
 
 <section data-markdown><script type="text/template">
 
-# Demo 7: Fldigi
+# Future
+
+As the radio spectrum gets more crowded, devices must become more flexible in terms of modes, frequencies, and protocols &mdash; SDR is unmatched in these areas
+
+I believe perl and PDL are brilliant tools for prototyping and experimenting with SDR, and eventually also for building production applications
 
 </script></section>
 
