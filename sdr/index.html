@@ -252,13 +252,45 @@ PDL lets you work with arrays like simple perl variables
 </script></section>
 
 
+
+
 <section data-markdown><script type="text/template">
 
 # IQ Samples
 
-FIXME
+* The SDR devices we'll talk about send and receive complex (not real) samples
+* Each sample consists of 2 unsigned bytes called `I` and `Q`
+* `I` stands for in-phase and represents the real part of the sample
+* `Q` stands for quadrature and represents the imaginary part
+
+![IQ Stream](iqstream.svg)
 
 </script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Negative frequencies
+
+When represented as complex numbers, all real (non-complex) signals must have negative frequencies that are symmetric around 0 hertz:
+
+![Real spectrum](baseband1.svg)
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Complex baseband
+
+However the signals you get from SDRs are not real: they have had their (redundant) negative frequencies removed and are shifted down to centre on 0 hertz:
+
+![Complex baseband](baseband2.svg)
+
+</script></section>
+
 
 
 <section data-markdown><script type="text/template">
