@@ -123,7 +123,7 @@ We don't record what happens between samples, and only approximately record the 
 
 # Aliasing
 
-* *All* of discrete sample series are ambiguous
+* *All* discrete sample series are ambiguous
 * Each of them in fact represents an infinte number of continuous signals (aliases)
 
 ![Aliased Sines](gen/aliased-sines.svg)
@@ -285,7 +285,7 @@ All real signals have negative frequencies that are symmetric around 0 hertz (th
 
 # Complex baseband
 
-However the signals you get from SDRs are not real: they have had their (redundant) negative frequencies removed and are shifted down to centre on 0 hertz:
+However the signals you get from SDRs are not real: their (redundant) negative frequencies are removed and they are shifted down to centre on 0 hertz:
 
 ![Complex baseband](baseband2.svg)
 
@@ -330,7 +330,7 @@ http://greatscottgadgets.com/hackrf/
 
 <section data-markdown><script type="text/template">
 
-The clicking sound comes from abrupt phase changes &mdash; we aren't keeping track of the signal's phase between blocks
+The clicking sound comes from abrupt phase changes &mdash; we aren't keeping track of the signal's phase between calls to our callback
 
 ![Phase Discontinuity](gen/phase-discontinuity.svg)
 
@@ -493,7 +493,7 @@ Often we need to change a sample rate, for example between RF and audio sample r
  
 <section data-markdown><script type="text/template">
 
-**Upsampling** is the addition of N zero-valued samples between each sample:
+**Upsampling** is the addition of N-1 zero-valued samples between each sample:
 
 ![Upsampling](upsampling.svg)
 
@@ -510,7 +510,7 @@ Often we need to change a sample rate, for example between RF and audio sample r
 
 <section data-markdown><script type="text/template">
 
-**Downsampling** is where you remove all samples except every Nth sample:
+**Downsampling** is where you remove all samples except keep every Nth sample:
 
 ![Downsampling](downsampling.svg)
 
@@ -591,7 +591,7 @@ Let's try to receive an FM broadcast.
 
 ## RF filter stage
 
-First we do a 4:1 decimation which filters out neighbouring stations
+First we do a 4:1 decimation with filter values set to filter out neighbouring stations
 
       ## Decimate 4:1, 2000k -> 500k
 
@@ -608,7 +608,7 @@ The `fc` and `N` args are options to our low-pass filter: [PDL::DSP::Fir::Simple
 
 ## FM demodulation
 
-Compute the difference in phase angle between subsequent samples
+Compute the difference in phase angle between pairs of adjacent samples
 
       use PDL::Complex;
 
@@ -627,11 +627,13 @@ Compute the difference in phase angle between subsequent samples
 
 <section data-markdown><script type="text/template">
 
-Frequency is the derivative of phase
+## Frequency is the derivative of phase
 
-This is why we heard clicking earlier
+Multiplying complex numbers adds their phase angles. If you take the complex conjugate of one before multiplying, you are subtracting their phase angles.
 
-FIXME
+![FM Phase](fmphase.svg)
+
+Phase modulation *is* frequency modulation: This is why we heard clicking earlier
 
 </script></section>
 
@@ -672,7 +674,7 @@ Finally, send audio to speakers
 
 # Amateur radio
 
-Hams have been doing SDR for a long time with just sound cards, for example PSK-31 contacts:
+Hams have been doing SDR for a long time with just sound cards, for example PSK-31 contacts with fldigi:
 
 ![FLDigi](fldigi.png)
 

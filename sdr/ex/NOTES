@@ -1,9 +1,13 @@
 SSB demo:
 
+tune to 14.250 MHz USB
+
 perl tx_clicks.pl 14000000 251000
 perl tx_no_clicks.pl 14000000 251000
 
 FM demo:
+
+tune to 103.1 MHz WBFM
 
 perl tx_clicks.pl 103000000 100000
 perl tx_no_clicks.pl 103000000 100000
