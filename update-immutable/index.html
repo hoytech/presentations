@@ -80,7 +80,7 @@ React has a utility called `update`
 
 # Usage
 
-The idea is that you can apply *updates* to data structures.
+The idea is that small, serialisable data structures called *updates* can modify larger data structures
 
 `update` returns new data structures with the update applied but it **does not change the original**
 
@@ -131,11 +131,11 @@ Very perlish feature-set (because javascript copied a lot from perl):
 
 # Server-side DOM updates
 
-One of the major use-cases is transferring updates between the server/browser. This way data structures can be updated without re-transferring the entire data structure.
+A major use-case is transferring updates between the server and browser. Data structures can be updated without re-transferring the entire data structure.
 
 **Direct server -> react rendered DOM updates**
 
-Of course you need a server-side implementation, and who wants to use `node.js`?
+Of course you need a server-side implementation and, honestly, who wants to use `node.js`?
 
 </script></section>
 
@@ -145,9 +145,9 @@ Of course you need a server-side implementation, and who wants to use `node.js`?
 
 # Update::Immutable
 
-Enter `Update::Immutable`
+A new perl module
 
-* Implements almost all react functionality (except `$apply`)
+* Implements almost all react `update` functionality (except `$apply`)
 * Simple recursive implementation (no react dependency)
 * Implements `$unset` (react refuses to merge)
 * Fixes bug in `$unshift`
@@ -163,7 +163,7 @@ Enter `Update::Immutable`
 
 ... is awesome.
 
-You don't need to maintain initial values in your component state initializers.
+You don't need to maintain initial values in your component state initializers
 
     var orig = { a: {} };
     var next = update(orig, { a: { b: { c: { d: { $set: 2 } } } } });
