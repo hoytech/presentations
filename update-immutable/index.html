@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+
+    <title>Update::Immutable</title>
+
+    <meta name="author" content="Doug Hoyte">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <link rel="stylesheet" href="../reveal.js/css/reveal.css">
+    <link rel="stylesheet" href="../reveal.js/css/theme/black.css" id="theme">
+
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="../reveal.js/lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+      var link = document.createElement( 'link' );
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = window.location.search.match( /print-pdf/gi ) ? '../reveal.js/css/print/pdf.css' : '../reveal.js/css/print/paper.css';
+      document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="../reveal.js/lib/js/html5shiv.js"></script>
+    <![endif]-->
+
+    <style>
+      .reveal .slides h1, .reveal .slides h2, .reveal .slides h3 {
+        text-transform: none;
+      }
+
+      .two-column {
+        display: flex;
+        flex-wrap: wrap;
+      }
+
+      .two-column em {
+        margin: 20px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="reveal">
+      <div class="slides">
+
+<!------------------------------------------------------->
+
+
+
+<section data-markdown><script type="text/template">
+
+# Update::Immutable
+
+Doug Hoyte
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# React
+
+React has a utility called update
+
+[https://facebook.github.io/react/docs/update.html](|https://facebook.github.io/react/docs/update.html)
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+# Usage
+
+The idea is that you can apply *updates* to data structures. It returns new data structures with the update applied **without changing the original**
+
+    var orig = { a: 1 };
+    var next = update(orig, { b: { $set: 2 } });
+
+    ## next is now   { a: 1, b: 2 }
+    ## orig is still { a: 1 }
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+# Shared data
+
+Another key feature is that structures that can be shared are guaranteed to be shared. This allows efficient implementations of react's `shouldComponentUpdate`:
+
+Here the array `[321]` is the same array in both `a` and `b`:
+
+    var orig = { a: [321] };
+    var next = update(orig, { b: { $set: 2 } });
+
+    ## next is now { a: [321], b: 2 }
+    ## orig is still { a: [321] }
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+# Features
+
+Very perlish feature-set (because javascript copied a lot from perl):
+
+* `$set` - Set a hash key to a value
+* `$merge` - Set multiple hash keys
+* `$push` - Append onto an array
+* `$unshift` - Prepend onto an array
+* `$splice` - Splice into an array (adding or removing)
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+# Server-side DOM updates
+
+One of the major use-cases is transferring updates between the server/browser. This way data structures can be updated without re-transferring the entire data structure.
+
+**Direct server -> react rendered DOM updates**
+
+Of course you need a server-side implementation, and who wants to use `node.js`?
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Update::Immutable
+
+Enter `Update::Immutable`
+
+* Implements almost all react functionality (except `$apply`)
+* Simple recursive implementation (no react dependency)
+* Implements `$unset` (react refuses to merge)
+* Fixes bug in `$unshift`
+* Auto-vivification...
+
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Auto-vivification
+
+... is awesome.
+
+You don't need to maintain initial values in your component state initializers.
+
+    var orig = { a: {} };
+    var next = update(orig, { a: { b: { c: { d: { $set: 2 } } } } });
+
+    ## next is now { a: { b: { c: { d: 2 } } } }
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Thank you
+
+CPAN
+
+    cpanm --sudo Update::Immutable
+
+This presentation:<br/>
+[https://hoytech.github.io/presentations/update-immutable/](https://hoytech.github.io/presentations/update-immutable/)
+
+Perl docs
+[https://metacpan.org/pod/Update::Immutable](https://metacpan.org/pod/Update::Immutable)
+
+Javascript docs
+[https://www.npmjs.com/package/update-immutable](https://www.npmjs.com/package/update-immutable)
+
+</script></section>
+
+
+
+
+<!------------------------------------------------------->
+
+
+      </div>
+
+    </div>
+
+    <script src="../reveal.js/lib/js/head.min.js"></script>
+    <script src="../reveal.js/js/reveal.js"></script>
+
+    <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        transition: 'none', // none/fade/slide/convex/concave/zoom
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: '../reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../reveal.js/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+        ]
+      });
+
+    </script>
+
+  </body>
+</html>
