@@ -69,7 +69,7 @@ Doug Hoyte
 
 # React
 
-React has a utility called update
+React has a utility called `update`
 
 [https://facebook.github.io/react/docs/update.html](|https://facebook.github.io/react/docs/update.html)
 
@@ -80,7 +80,9 @@ React has a utility called update
 
 # Usage
 
-The idea is that you can apply *updates* to data structures. It returns new data structures with the update applied **without changing the original**
+The idea is that you can apply *updates* to data structures.
+
+`update` returns new data structures with the update applied but it **does not change the original**
 
     var orig = { a: 1 };
     var next = update(orig, { b: { $set: 2 } });
@@ -95,7 +97,9 @@ The idea is that you can apply *updates* to data structures. It returns new data
 
 # Shared data
 
-Another key feature is that structures that can be shared are guaranteed to be shared. This allows efficient implementations of react's `shouldComponentUpdate`:
+Another key feature is that structures that can be shared are guaranteed to be shared.
+
+This is cheaper than a "deep clone" and allows efficient implementations of react's `shouldComponentUpdate`
 
 Here the array `[321]` is the same array in both `a` and `b`:
 
@@ -148,7 +152,6 @@ Enter `Update::Immutable`
 * Implements `$unset` (react refuses to merge)
 * Fixes bug in `$unshift`
 * Auto-vivification...
-
 
 </script></section>
 
