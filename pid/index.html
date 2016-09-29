@@ -234,6 +234,19 @@ Need to balance various competing goals
 
 <section data-markdown><script type="text/template">
 
+# 3D Printing G-Code
+
+Once you've figured out some good **Kp**, **Ki**, and **Kd** values, you send g-code to your printer:
+
+    M301 H1 P21 I0.02 D244
+
+`H1` indicates the heater number (`H0` is bed, `H1` is extruder 1, `H2` is extruder 2...)
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
 # Demo
 
 <a href="#">Click Here</a>
@@ -244,13 +257,38 @@ Need to balance various competing goals
 
 <section data-markdown><script type="text/template">
 
-# sinc function
+# sinc
 
 When there is an abrupt change in set point, the "ringing" looks like the `sinc(x) = sin(x)/x` function:
 
 <img style="max-width: 40%; max-height: 40%" src="sinc.svg" />
 
-This is not a coincidence...
+This is not a coincidence.
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Dealing with noise
+
+Sensor noise is common and can interfere with PID controls, especially the derivative term
+
+Solutions:
+
+* FIR low-pass filters (moving averages, etc)
+* IIR low-pass filters (for efficiency)
+* Kalman filters
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+# Thank you
+
+FIXME: links
 
 </script></section>
 
