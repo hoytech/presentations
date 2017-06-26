@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+
+    <title>REST APIs with Chouette</title>
+
+    <meta name="author" content="Doug Hoyte">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <link rel="stylesheet" href="../reveal.js/css/reveal.css">
+    <link rel="stylesheet" href="../reveal.js/css/theme/black.css" id="theme">
+
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="../reveal.js/lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+      var link = document.createElement( 'link' );
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = window.location.search.match( /print-pdf/gi ) ? '../reveal.js/css/print/pdf.css' : '../reveal.js/css/print/paper.css';
+      document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="../reveal.js/lib/js/html5shiv.js"></script>
+    <![endif]-->
+
+    <style>
+      .reveal .slides h1, .reveal .slides h2, .reveal .slides h3 {
+        text-transform: none;
+      }
+
+      .two-column {
+        display: flex;
+        flex-wrap: wrap;
+      }
+
+      .two-column em {
+        margin: 20px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="reveal">
+      <div class="slides">
+
+<!------------------------------------------------------->
+
+
+
+<section data-markdown><script type="text/template">
+
+# REST APIs with Chouette
+
+Doug Hoyte
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Chouette
+
+Chouette is a framework for making asynchronous HTTP/REST applications
+
+It combines several of my modules together in an opinionated way
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# My Modules
+
+* AnyEvent::Task
+  * Delegate blocking tasks to processes
+* Callback::Frame
+  * Error handling across callbacks
+* Log::Defer
+  * Structured logging
+* Session::Token
+  * Random identifiers
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# High-level usage
+
+* Create `Chouette` object
+    * Pass in parameters to Chouette constructor
+* Call `run` method on chouette object
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Hello world
+
+<pre><code class="perl" style="max-height: 1000px">use Chouette;
+
+my $chouette = Chouette->new({
+    config_defaults => {
+        var_dir => 'demo-var/',
+        listen => 8080,
+    }, 
+
+    routes => {
+        '/' => {
+            GET => sub {
+              my $c = shift;
+              $c->respond({ data => "hello world" });
+            },
+        }
+    },
+});
+
+$chouette->run;
+</code></pre>
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Routes
+
+Routes can be `sub` callbacks, or fully-qualified function/package names:
+
+<pre><code class="perl" style="max-height: 1000px"> routes => {
+    '/myapi/resource' => {
+        POST => 'MyAPI::Resource::create',
+        GET => 'MyAPI::Resource::get_all',
+    },
+  }
+</code></pre>
+
+Nice error messages:
+
+    Couldn't require MyAPI::Resource
+      (needed for route: POST /myapi/resource)
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+# Route parameters
+
+<pre><code class="perl" style="max-height: 1000px"> routes => {
+    '/myapi/resource/:resource_id' => {
+        DELETE => 'MyAPI::Resource::delete',
+        GET => 'MyAPI::Resource::get_single',
+    },
+  }
+</code></pre>
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+# Regexp::Assemble
+
+Routes are compiled into a regexp for fast dispatching
+
+<pre>  /foo/bar
+  /foo/bar/junk
+  /foo/bar/junk/:id
+  /foo/blah'
+</code></pre>
+
+Compiles to:
+ 
+<pre><code style="max-width: 1000px">\A/foo/b(?:ar(?:/junk(?:/(?&lt;id&gt;[^/]+)\z(?{0})|\z(?{1}))|\z(?{2}))|lah\z(?{3}))
+</code></pre>
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+# Plack middleware
+
+Chouette is integrated with Plack. Use any Plack middleware like so:
+
+<pre><code>middleware => [
+    'Plack::Middleware::ContentLength',
+    'ETag',
+    ['Plack::Middleware::CrossOrigin', origins => '*'],
+],
+</code></pre>
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+# Context objects
+
+Context objects are passed into route handlers. Usually they are stored in a local variable `$c`:
+
+<pre><code class="perl">package MyAPI::Resource;
+
+sub create {
+  my $c = shift;
+
+  # do stuff with $c...
+}
+
+1;
+</code></pre>
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+# Responding with JSON
+
+<pre><code class="perl">sub handler {
+  my $c = shift;
+  $c->respond({ result => 'ok' });
+}
+</code></pre>
+
+    $ curl -D - localhost:8080
+    HTTP/1.1 200 OK
+    Content-Type: application/json
+    Content-Length: 15
+
+    {"result":"ok"}
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Continue after responding
+
+<pre><code class="perl">$c->respond({ result => 'ok' });
+# processing continues...
+</code></pre>
+
+<pre><code class="perl">die $c->respond({ result => 'ok' });
+# no more processing...
+</code></pre>
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Errors
+
+All of these are equivalent:
+
+<pre><code class="perl">die $c->respond({ error => "access denied" }, 403);
+</code></pre>
+
+<pre><code class="perl">die "403: access denied";
+</code></pre>
+
+<pre><code class="perl">die 403;
+</code></pre>
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+# Plack request object
+
+<pre><code class="perl">my $name = $c->req->parameters->{name};
+</code></pre>
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Session::Token value
+ 
+<pre><code class="perl">my $token = $c->generate_token;
+# uCBoYHMRcDxStJl5xinwTv
+</code></pre>
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Log::Defer
+
+Get the `Log::Defer` object for this request with<br/> `$c->logger`
+
+<pre><code class="perl">
+$c->logger->info("Logged in OK");
+
+$c->logger->data->{username} = $username;
+
+{
+    my $timer = $c->logger->timer("long_operation");
+    long_operation();
+}
+</code></pre>
+
+</script></section>
+
+
+
+
+
+<section data-markdown><script type="text/template">
+
+# log-defer-viz log viewer
+
+<pre><code style="max-height: 1000px; width: 1000px; font-size: 80%">
+------ 2017-05-26 Fri 12:39:20.85795 EDT (1495816760.85795) ------
+  | 0.000062 [ INFO] Request from 127.0.0.1 : POST /apikey/create
+  | 0.003379 [ WARN] mixpanel not configured, skipping tracking
+  | 0.009870 [ INFO] Adding apikey XNsN7WgkrgmGo6AvGRhbvQ with permissions 3
+  | 0.010030 [ INFO] admin url: http://localhost:8005/admin/
+  | 0.016331 [ INFO] OK: apikey added
+  | 0.018782 [ INFO] HTTP response: 200 (34 bytes of application/json)
+  |_0.019131 [END]
+
+ selectrow_hashref     |==|
+ selectrow_hashref          |=|
+                do             |========|
+ selectrow_hashref                       X
+                do                         |=|
+            commit                            |===|
+        add_apikey                                  |======================|
+                do                                                          |=|
+            commit                                                             |==|
+__________________________________________________________________________________________
+times in ms            1.3 2.7         6.5  8.1  9.7                    16.7
+                           2.4          6.2  7.9  9.5                    16.5 17.4 18.7
+</code></pre>
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+#
+
+<pre><code class="perl">
+</code></pre>
+
+</script></section>
+
+
+
+
+
+<section data-markdown><script type="text/template">
+
+# Thank you
+
+    cpanm --sudo Chouette
+
+This presentation:<br/>
+[https://hoytech.github.io/presentations/chouette/](https://hoytech.github.io/presentations/chouette/)
+
+Docs:<br/>
+[https://metacpan.org/pod/Chouette](https://metacpan.org/pod/Chouette)
+
+</script></section>
+
+
+
+
+<!------------------------------------------------------->
+
+
+      </div>
+
+    </div>
+
+    <script src="../reveal.js/lib/js/head.min.js"></script>
+    <script src="../reveal.js/js/reveal.js"></script>
+
+    <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        transition: 'none', // none/fade/slide/convex/concave/zoom
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: '../reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../reveal.js/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+        ]
+      });
+
+    </script>
+
+  </body>
+</html>
