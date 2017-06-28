@@ -114,7 +114,7 @@ Let's "fix" it by adding a sleep
 # "In a perfect world..."
 
 * Almost everyone agrees that sleep is not ideal
-* Somehow the server needs to signal when it is ready
+* Somehow the server needs to signal when it is ready so the test can proceed
 
 </script></section>
 
@@ -125,8 +125,8 @@ Let's "fix" it by adding a sleep
 # Pragmatism wins
 
 * The correct solution is difficult
-  * Often requires changing code; sometimes even big architectural changes
-  * Sometimes you don't own the code that needs to change
+  * Requires changing code; sometimes even big architectural changes
+  * Maybe you don't own the code that needs to change
   * Companies already have big test-suites and just want them to work
   * Companies tend to under-invest in their test systems
 
@@ -142,7 +142,7 @@ Let's "fix" it by adding a sleep
 * Step 1: Add the following to the file `.logp.conf`
 
       trace:
-        sync_listen_connect_port: 9876
+        sync_port: 9876
 
 * Step 2: Then run your test suite with
 
@@ -164,10 +164,36 @@ Now that it's deterministic, do we need to go and delete all those sleeps to mak
 You can, or you can add a `sleep_speedup` option to the `.logp.conf` file:
 
     trace:
-      sync_listen_connect_port: 9876
+      sync_port: 9876
       sleep_speedup: true
 
 Now your tests are deterministic and fast!
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# How does it work?
+
+* The `logp` process is a master-controller process
+* Child processes have certain functions like `connect`, `bind`, `listen` replaced with `LD_PRELOAD`
+* Child processes check with the master process before calling their functions
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Future
+
+* Eliminate other sources of flakey tests
+  * Other races, such as DB/filesystem access
+  * Concurrency ordering
+  * Dates/times
+  * Random numbers
 
 </script></section>
 

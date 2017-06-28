@@ -71,7 +71,7 @@ Doug Hoyte
 
 Chouette is a framework for making asynchronous HTTP/REST applications
 
-It combines several of my modules together in an opinionated way
+It combines several of my modules together in a convenient way
 
 </script></section>
 
@@ -79,7 +79,7 @@ It combines several of my modules together in an opinionated way
 
 <section data-markdown><script type="text/template">
 
-# My Modules
+# Modules
 
 * AnyEvent::Task
   * Delegate blocking tasks to processes
@@ -180,7 +180,7 @@ Routes can be `sub` callbacks, or fully-qualified function/package names:
   }
 </code></pre>
 
-Nice error messages:
+Nice compile-time error messages:
 
     Couldn't require MyAPI::Resource
       (needed for route: POST /myapi/resource)
@@ -189,6 +189,28 @@ Nice error messages:
       (needed for route: GET /myapi/resource)
 
 </script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Context objects
+
+Context objects are passed into route handlers. Typically you store it in a variable `$c`:
+
+<pre><code class="perl">package MyAPI::Resource;
+
+sub create {
+  my $c = shift;
+
+  # do stuff with $c...
+}
+
+1;
+</code></pre>
+
+</script></section>
+
 
 
 <section data-markdown><script type="text/template">
@@ -201,6 +223,14 @@ Nice error messages:
         GET => 'MyAPI::Resource::get_single',
     },
   }
+</code></pre>
+
+<pre><code class="perl" style="max-height: 1000px">package MyAPI::Resource;
+
+sub delete {
+    my $c = shift;
+    do_delete($c->route_params->{resource_id});
+}
 </code></pre>
 
 </script></section>
@@ -248,25 +278,6 @@ Chouette is integrated with Plack. Use any Plack middleware like so:
 
 
 
-<section data-markdown><script type="text/template">
-
-# Context objects
-
-Context objects are passed into route handlers. Typically you store it in a variable `$c`:
-
-<pre><code class="perl">package MyAPI::Resource;
-
-sub create {
-  my $c = shift;
-
-  # do stuff with $c...
-}
-
-1;
-</code></pre>
-
-</script></section>
-
 
 
 
@@ -302,6 +313,13 @@ JSON is the default...
 <pre><code class="perl">$c->respond({ result => 'ok' });
 # processing continues...
 </code></pre>
+
+<pre><code class="perl">$c->respond({ result => 'ok' });
+$c->done;
+# no more processing...
+</code></pre>
+
+Shortcut:
 
 <pre><code class="perl">die $c->respond({ result => 'ok' });
 # no more processing...
