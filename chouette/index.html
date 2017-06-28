@@ -69,9 +69,9 @@ Doug Hoyte
 
 # Chouette
 
-Chouette is a framework for making asynchronous HTTP/REST applications
-
-It combines several of my modules together in a convenient way
+* A framework for asynchronous HTTP/REST applications
+* Combines several of my modules together in a convenient package
+* Lessons learned from making a bunch of async servers in the past
 
 </script></section>
 
@@ -99,8 +99,10 @@ It combines several of my modules together in a convenient way
 # High-level usage
 
 * Create `Chouette` object
-    * Pass in parameters to Chouette constructor
+  * Pass in parameters to Chouette constructor
+  * Including routes and their associated handlers
 * Call `run` method on chouette object
+* Handlers receive a "context" object
 
 </script></section>
 
@@ -196,7 +198,7 @@ Nice compile-time error messages:
 
 # Context objects
 
-Context objects are passed into route handlers. Typically you store it in a variable `$c`:
+Context objects are passed into route handlers. Typically you store it in the variable `$c`:
 
 <pre><code class="perl">package MyAPI::Resource;
 
@@ -372,6 +374,8 @@ Random tokens are available when you need them...
 # uCBoYHMRcDxStJl5xinwTv
 </code></pre>
 
+Generator is lazily seeded to avoid cold random pool on boot
+
 </script></section>
 
 
@@ -545,7 +549,7 @@ perl,15967 -I lib server.pl
 
 # Much more
 
-Many more little details are handled behind the scenes
+Lots of little details are handled behind the scenes
 
 * YAML config files for your apps
 * Character encoding/decoding
@@ -553,6 +557,7 @@ Many more little details are handled behind the scenes
 * Log rotation with symlink to current log file
 * Can log from task objects, even though they are in separate processes
 * Unix socket support
+* etc
 
 </script></section>
 

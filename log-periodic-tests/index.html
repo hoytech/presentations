@@ -139,12 +139,12 @@ Let's "fix" it by adding a sleep
 
 # Log Periodic
 
-* Step 1: Add the following to the file `.logp.conf`
+* Step 1: Add the following to `.logp.conf`
 
       trace:
         sync_port: 9876
 
-* Step 2: Then run your test suite with
+* Step 2: Run your test suite with
 
       logp trace <my command> <my args>
 
@@ -178,8 +178,9 @@ Now your tests are deterministic and fast!
 # How does it work?
 
 * The `logp` process is a master-controller process
-* Child processes have certain functions like `connect`, `bind`, `listen` replaced with `LD_PRELOAD`
-* Child processes check with the master process before calling their functions
+* Children connect to the master process a over unix socket before running main()
+* Children have certain functions like `connect`, `bind`, `listen`, `nanosleep` replaced with `LD_PRELOAD`
+* Children synchronise with the master process before or after calling their functions
 
 </script></section>
 
@@ -187,9 +188,9 @@ Now your tests are deterministic and fast!
 
 <section data-markdown><script type="text/template">
 
-# Future
+# More features
 
-* Eliminate other sources of flakey tests
+* Eliminate other sources of non-determinism in tests
   * Other races, such as DB/filesystem access
   * Concurrency ordering
   * Dates/times
@@ -201,9 +202,21 @@ Now your tests are deterministic and fast!
 
 <section data-markdown><script type="text/template">
 
+# Other uses
+
+* Verify your tests handle connection errors properly
+* Stress-test your code by exposing race conditions
+* Test your code works during daylight savings time roll-over
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
 # Thank you
 
-Have a flakey and/or slow test-suite?
+Have an unreliable and/or slow test-suite?
 
 Drop me an email and we'll see if we can help:
 
