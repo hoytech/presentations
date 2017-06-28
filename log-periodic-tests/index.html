@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+
+    <title>Better test suites with Log Periodic</title>
+
+    <meta name="author" content="Doug Hoyte">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <link rel="stylesheet" href="../reveal.js/css/reveal.css">
+    <link rel="stylesheet" href="../reveal.js/css/theme/black.css" id="theme">
+
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="../reveal.js/lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+      var link = document.createElement( 'link' );
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = window.location.search.match( /print-pdf/gi ) ? '../reveal.js/css/print/pdf.css' : '../reveal.js/css/print/paper.css';
+      document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="../reveal.js/lib/js/html5shiv.js"></script>
+    <![endif]-->
+
+    <style>
+      .reveal .slides h1, .reveal .slides h2, .reveal .slides h3 {
+        text-transform: none;
+      }
+
+      .two-column {
+        display: flex;
+        flex-wrap: wrap;
+      }
+
+      .two-column em {
+        margin: 20px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="reveal">
+      <div class="slides">
+
+<!------------------------------------------------------->
+
+
+
+<section data-markdown><script type="text/template">
+
+# Better test suites with Log Periodic
+
+Doug Hoyte
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Consider this script
+
+What could possibly go wrong here?
+
+    #!/bin/bash
+    python -m SimpleHTTPServer 9876 &
+    curl -I localhost:9876
+    kill $! # stop web server
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+# sleep to the rescue!
+
+Let's "fix" it by adding a sleep
+
+    #!/bin/bash
+    python -m SimpleHTTPServer 9876 &
+    sleep 1 # wait for server to start
+    curl -I localhost:9876 
+    kill $! # stop web server 
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Problems with sleep
+
+* How do you know you are sleeping for long enough?
+  * Test is still non-deterministic
+* Your test suites become a lot slower
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# "In a perfect world..."
+
+* Almost everyone agrees that sleep is not ideal
+* Somehow the server needs to signal when it is ready
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Pragmatism wins
+
+* The correct solution is difficult
+  * Often requires changing code; sometimes even big architectural changes
+  * Sometimes you don't own the code that needs to change
+  * Companies already have big test-suites and just want them to work
+  * Companies tend to under-invest in their test systems
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+# Log Periodic
+
+* Step 1: Add the following to the file `.logp.conf`
+
+      trace:
+        sync_listen_connect_port: 9876
+
+* Step 2: Then run your test suite with
+
+      logp trace <my command> <my args>
+
+* Step 3: Enjoy your deterministic tests!
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+# Speeding up tests
+
+Now that it's deterministic, do we need to go and delete all those sleeps to make it fast?
+
+You can, or you can add a `sleep_speedup` option to the `.logp.conf` file:
+
+    trace:
+      sync_listen_connect_port: 9876
+      sleep_speedup: true
+
+Now your tests are deterministic and fast!
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Thank you
+
+Have a flakey and/or slow test-suite?
+
+Drop me an email and we'll see if we can help:
+
+[doug@logperiodic.com](mailto:doug@logperiodic.com)
+
+</script></section>
+
+
+
+
+<!------------------------------------------------------->
+
+
+      </div>
+
+    </div>
+
+    <script src="../reveal.js/lib/js/head.min.js"></script>
+    <script src="../reveal.js/js/reveal.js"></script>
+
+    <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        transition: 'none', // none/fade/slide/convex/concave/zoom
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: '../reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../reveal.js/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+        ]
+      });
+
+    </script>
+
+  </body>
+</html>
