@@ -108,13 +108,13 @@ It combines several of my modules together in an opinionated way
 
 <section data-markdown><script type="text/template">
 
-# Hello world
+# hello-world-app.pl
 
 <pre><code class="perl" style="max-height: 1000px">use Chouette;
 
 my $chouette = Chouette->new({
     config_defaults => {
-        var_dir => 'demo-var/',
+        var_dir => '/var/demo-app/',
         listen => 8080,
     }, 
 
@@ -129,6 +129,37 @@ my $chouette = Chouette->new({
 });
 
 $chouette->run;
+</code></pre>
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Run the script
+
+    $ perl -I lib hello-world-app.pl
+    =========================================================
+    Chouette 0.101
+
+    PID = 16652
+    UID/GIDs = 1000/1000 4 20 24 27 30 46 113 129 1000
+    Listening on: http://0.0.0.0:8080
+
+    Follow log messages:
+        log-defer-viz -F /var/demo-app/logs/app.current.log
+    =========================================================
+</code></pre>
+
+In another window:
+
+<pre><code class="perl">$ curl -D - localhost:8080
+HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 22
+
+{"data":"hello world"}
 </code></pre>
 
 </script></section>
@@ -153,6 +184,9 @@ Nice error messages:
 
     Couldn't require MyAPI::Resource
       (needed for route: POST /myapi/resource)
+
+    Couldn't find function get_all in MyAPI::Resource
+      (needed for route: GET /myapi/resource)
 
 </script></section>
 
@@ -207,6 +241,8 @@ Chouette is integrated with Plack. Use any Plack middleware like so:
 ],
 </code></pre>
 
+(ETag is short for Plack::Middleware::ETag)
+
 </script></section>
 
 
@@ -216,7 +252,7 @@ Chouette is integrated with Plack. Use any Plack middleware like so:
 
 # Context objects
 
-Context objects are passed into route handlers. Usually they are stored in a local variable `$c`:
+Context objects are passed into route handlers. Typically you store it in a variable `$c`:
 
 <pre><code class="perl">package MyAPI::Resource;
 
@@ -238,6 +274,8 @@ sub create {
 
 # Responding with JSON
 
+JSON is the default...
+
 <pre><code class="perl">sub handler {
   my $c = shift;
   $c->respond({ result => 'ok' });
@@ -252,6 +290,8 @@ sub create {
     {"result":"ok"}
 
 </script></section>
+
+
 
 
 
@@ -275,7 +315,7 @@ sub create {
 
 # Errors
 
-All of these are equivalent:
+These are pretty much equivalent:
 
 <pre><code class="perl">die $c->respond({ error => "access denied" }, 403);
 </code></pre>
@@ -295,6 +335,8 @@ All of these are equivalent:
 
 # Plack request object
 
+Get the `Plack::Request` object with `$c->req` so you can get query params, POST params, path info, etc
+
 <pre><code class="perl">my $name = $c->req->parameters->{name};
 </code></pre>
 
@@ -305,6 +347,8 @@ All of these are equivalent:
 <section data-markdown><script type="text/template">
 
 # Session::Token value
+
+Random tokens are available when you need them...
  
 <pre><code class="perl">my $token = $c->generate_token;
 # uCBoYHMRcDxStJl5xinwTv
@@ -369,13 +413,128 @@ times in ms            1.3 2.7         6.5  8.1  9.7                    16.7
 
 
 
+<section data-markdown><script type="text/template">
+
+# Tasks
+
+Chouette is asynchronous so you shouldn't do blocking tasks in the handlers
+
+For that, `AnyEvent::Task` allows you to farm out such tasks to other processes
+
+Step 1: Register the task in your Chouette object:
+
+<pre><code class="perl">tasks => {
+    hasher => {
+        pkg => 'MyAPI::Task::MD5',
+    }
+}
+</code></pre>
+
+</script></section>
+
+
 
 <section data-markdown><script type="text/template">
 
-#
+# Tasks 2
 
-<pre><code class="perl">
+Step 2: Implement the task as a class:
+
+<pre><code class="perl">package MyAPI::Task::MD5;
+
+use Digest::MD5;
+
+sub new {
+    my ($class, %args) = @_;
+    return bless {}, $class;
+}
+
+sub md5 {
+  my ($self, $password) = @_;
+  return Digest::MD5::md5_hex($password);
+}
+
+1;
 </code></pre>
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Tasks 3
+
+Step 3: Use the task from inside a handler:
+
+<pre><code class="perl">$c->task('hasher')->md5($input, sub {
+    my ($hasher, $output) = @_;
+    $c->logger->info("The MD5 is $output");
+});
+</code></pre>
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Task processes
+
+`AnyEvent::Task` will spin up processes as required, queue requests, and much more.
+
+You can monitor/debug the processes with normal unix tools:
+
+<pre><code class="perl">$ pstree -ap 15967
+perl,15967 -I lib server.pl
+  └─AET-Server:hasher,15968
+      ├─AET-Worker:hasher,15969
+      └─AET-Worker:hasher,15970
+</code></pre>
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+# Exception handling
+
+`Callback::Frame` is used so that exceptions get mapped to the right request, no matter what callback context:
+
+<pre><code class="perl">sub handler {
+  my $c = shift;
+
+  my $dbh = $c->task('db');
+
+  $dbh->selectrow_hashref("SELECT * FROM events WHERE id = ?",
+                          undef, $c->req->parameters->{id}, sub {
+    my ($dbh, $row) = @_;
+
+    die "404: no event found" if !$row;
+
+    ## process event...
+  });
+}
+</code></pre>
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+# Much more
+
+Many more little details are handled behind the scenes
+
+* YAML config files for your apps
+* Character encoding/decoding
+* No log data is lost if you try to log a non-serialisable object
+* Log rotation with symlink to current log file
+* Can log from task objects, even though they are in separate processes
+* Unix socket support
 
 </script></section>
 
@@ -389,11 +548,11 @@ times in ms            1.3 2.7         6.5  8.1  9.7                    16.7
 
     cpanm --sudo Chouette
 
-This presentation:<br/>
-[https://hoytech.github.io/presentations/chouette/](https://hoytech.github.io/presentations/chouette/)
-
 Docs:<br/>
 [https://metacpan.org/pod/Chouette](https://metacpan.org/pod/Chouette)
+
+This presentation:<br/>
+[https://hoytech.github.io/presentations/chouette/](https://hoytech.github.io/presentations/chouette/)
 
 </script></section>
 
