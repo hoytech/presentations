@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+
+    <title>The different types of telegraph keys</title>
+
+    <meta name="author" content="Doug Hoyte">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <link rel="stylesheet" href="../reveal.js/css/reveal.css">
+    <link rel="stylesheet" href="../reveal.js/css/theme/black.css" id="theme">
+
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="../reveal.js/lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+      var link = document.createElement( 'link' );
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = window.location.search.match( /print-pdf/gi ) ? '../reveal.js/css/print/pdf.css' : '../reveal.js/css/print/paper.css';
+      document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="../reveal.js/lib/js/html5shiv.js"></script>
+    <![endif]-->
+
+    <style>
+      .reveal .slides h1, .reveal .slides h2, .reveal .slides h3 {
+        text-transform: none;
+      }
+
+      .two-column {
+        display: flex;
+        flex-wrap: wrap;
+      }
+
+      .two-column em {
+        margin: 20px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="reveal">
+      <div class="slides">
+
+<!------------------------------------------------------->
+
+
+
+<section data-markdown><script type="text/template">
+
+# The Theory of LC Measurement
+
+Doug Hoyte
+
+VE3HOY
+
+</script></section>
+
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## Review: Impedance
+
+Impedance of an inductor increases with frequency:
+
+$${\it X\_L}=2\,\pi\,L\,f$$
+
+Impedance of capacitor decreases with frequency:
+
+$${\it X\_C}={{1}\over{2\,\pi\,C\,f}}$$
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## Review: Resonance
+
+The resonant frequency is the frequency where the impedances are equal:
+
+$$2\,\pi\,L\,f={{1}\over{2\,\pi\,C\,f}}$$
+
+Solving for $f$:
+
+$$f={{1}\over{2\,\pi\,\sqrt{L\,C}}}$$
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Hartley Oscillator
+
+<img style="background-color:white" width="50%" src="./hartley-schematic.svg">
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Measurement Concept
+
+* Take a frequency reading: $f\_{before}$
+* Connect a capacitor as the DUT (Device Under Test)
+* Take another frequency reading: $f\_{after}$
+* Infer the capacitance from the change in frequency
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## Test Setup
+
+<img style="background-color:white" width="70%" src="./hartley-schematic2.svg">
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Problem
+
+* The initial values of L and C aren't known exactly
+* Say we read 5 MHz on the frequency counter:
+
+$$5 MHz ={{1}\over{2\,\pi\,\sqrt{L\,C}}}$$
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+There are an infinite combination of L and C values that can theoretically result in this frequency:
+
+<img height="350" src="./graph.png" />
+
+(In practice, the values are constrained by the oscillator $Q$ value, which is related to $L/C$)
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## Solution
+
+* Measure frequency before
+* Apply a capacitor with known capacitance to the circuit
+* Measure frequency after
+* Infer $L$ and $C$ from frequency change
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+Since we measured $F\_{before}$ and $F\_{after}$, we can use the resonance equations:
+
+$${\it LC\_{before}}={{1}\over{4\,\pi^2\,f\_{before}^2}}$$
+
+$${\it LC\_{after}}={{1}\over{4\,\pi^2\,f\_{after}^2}}$$
+
+And we also know:
+
+$${\it C\_{after}}={\it C\_{before}}+{\it C\_{known}}$$
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+Now we can calculate $L$:
+
+$${\it L\,C\_{after}}={\it L\,(C\_{before}}+{\it C\_{known})}$$
+
+<!--
+$${\it L\,C\_{after}}={\it L\,C\_{before}}+{\it L\,C\_{known}}$$
+
+$${\it L\,C\_{after} - L\,C\_{before}}={\it L\,C\_{known}}$$
+-->
+
+$${\it L}={\it {L\,C\_{after} - L\,C\_{before}}\over{C\_{known}}}$$
+
+<p style="margin-top: 50px">
+And then $C\_{before}$:
+</p>
+
+$${\it C\_{before}}={\it {L\,C\_{before}}\over{L}}$$
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+Finally, now we can calculate unknown capacitor values:
+
+$${\it C\_{unknown}}={{1}\over{4\,\pi^2\,f^2\,L}}-C\_{before}$$
+
+Phew, OK the math is over, let's have a demo!
+
+</script></section>
+
+
+
+<script>
+function procCalc() {
+  var f_before = parseFloat(document.getElementById("f_before").value);
+  var c_known = parseFloat(document.getElementById("c_known").value);
+  var f_after = parseFloat(document.getElementById("f_after").value);
+  var f_measured = parseFloat(document.getElementById("f_measured").value);
+
+  f_before *= 1e6;
+  c_known *= 1e-12;
+  f_after *= 1e6;
+  f_measured *= 1e6;
+
+  var lcb = 1 / (4 * Math.PI**2 * f_before**2);
+  var lca = 1 / (4 * Math.PI**2 * f_after**2);
+console.log(lcb,lca);
+
+  var l = (lca - lcb) / c_known;
+  var c = lcb / l;
+console.log(l,c);
+
+  document.getElementById("inductance").innerHTML = (l === l) ? (l * 1e6).toFixed(3) : '??';
+  document.getElementById("c_before").innerHTML = (c === c) ? (c * 1e12).toFixed(1) : '??';
+
+  var c_unknown = (1 / (4 * Math.PI**2 * f_measured**2 * l)) - c;
+console.log(c_unknown);
+
+  if (c_unknown === c_unknown) document.getElementById("c_unknown").innerHTML = (c_unknown/1e-12).toFixed(1);
+  else document.getElementById("c_unknown").innerHTML = '??';
+}
+</script>
+
+<section data-markdown><script type="text/template">
+
+### Calibration
+
+<div>
+  <div>$f\_{before}$ = <input id="f_before" onKeyUp="procCalc();" /> MHz</div>
+  <div>$C\_{known}$ = <input id="c_known" onKeyUp="procCalc();" /> pF</div>
+  <div>$f\_{after}$ = <input id="f_after" onKeyUp="procCalc();" /> MHz</div>
+</div>
+
+$L$ = <span id ="inductance">??</span> &mu;H, $C$ = <span id ="c_before">??</span> pF
+
+### Measurement
+
+$f\_{measured}$ = <input id="f_measured" onKeyUp="procCalc();" /> MHz
+
+$C\_{unknown}$ = <span id="c_unknown">??</span> pF
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+# Thank you
+
+This presentation:<br/>
+[https://hoytech.github.io/presentations/lcr-meters/](https://hoytech.github.io/presentations/lcr-meters/)
+
+</script></section>
+
+
+
+
+<!------------------------------------------------------->
+
+
+      </div>
+
+    </div>
+
+    <script src="../reveal.js/lib/js/head.min.js"></script>
+    <script src="../reveal.js/js/reveal.js"></script>
+
+    <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        transition: 'none', // none/fade/slide/convex/concave/zoom
+
+	math: {
+          mathjax: '../lib/MathJax/MathJax.js',
+          config: 'TeX-AMS_SVG-full',
+	},
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: '../reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../reveal.js/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: '../reveal.js/plugin/math/math.js', async: true },
+        ]
+      });
+
+    </script>
+
+  </body>
+</html>
