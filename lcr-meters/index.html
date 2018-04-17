@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 
-    <title>The different types of telegraph keys</title>
+    <title>Measuring Small Capacitances</title>
 
     <meta name="author" content="Doug Hoyte">
 
@@ -57,7 +57,7 @@
 
 <section data-markdown><script type="text/template">
 
-# The Theory of LC Measurement
+# Measuring Small Capacitances
 
 Doug Hoyte
 
@@ -67,6 +67,96 @@ VE3HOY
 
 
 
+<section data-markdown><script type="text/template">
+
+## LCR Meters
+
+* Originally I was going to discuss a bunch of ways that LCR meters work. However there is far too much material to fit into a short talk!
+* Instead, I'll do a brief overview of:
+  * Bridge method
+  * Square-wave method
+* And deep dive into:
+  * Resonance method
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## Bridge Method
+
+<div style="display: flex; flex-direction: row; justify-content: space-evenly">
+  <img height="400" src="lcr-bridge-circuit-01.svg" />
+  <div style="height: 100%">
+    <ul>
+      <li>ABD and ACD are voltage dividers</li>
+      <li>$Z_3$ is adjusted until meter shows 0 current (or voltage), implying: $${\it {Z_U}\over{Z_1}} = {\it {Z_3}\over{Z_2}}$$</li>
+      <li>If $Z_3, Z_2, Z_1$ are known we can compute unknown impedance $Z_U$</li>
+    </ul>
+  </div>
+</div>
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+Given a known frequency $f$ and impedance $Z$, capacitance can be computed:
+
+$${\it C}={{1}\over{2\,\pi\,Z\,f}}$$
+
+* Modern designs use an op-amp instead of panel meter
+* Requires precisely known resistors and frequency
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Square wave method
+
+<div style="display: flex; flex-direction: row; justify-content: space-evenly">
+  <img height="400" src="square-wave.svg" style="background-color:white" />
+  <div style="height: 100%; font-size: 90%">
+    <ul>
+      <li>Applies square wave with known voltage and frequency, measures voltage across capacitor</li>
+      <li>Slope of red line corresponds to $C$ (how fast the capacitor charges)</li>
+    </ul>
+  </div>
+</div>
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+* Also can measure ESR (the drop-offs on the red line) caused by lead resistance/dielectric heating loss
+* Mostly suitable for larger value capacitors since they need to have negligible impedance at square wave's frequency
+* I *think* this is how our kit devices we ordered will work (not sure yet)
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Resonance Method
+
+<div style="display: flex; flex-direction: row; justify-content: space-evenly">
+  <img src="aade-lcr.gif" />
+  <div style="height: 100%; font-size: 90%">
+    <ul>
+      <li>Inspired by a really great kit I built years ago: AADE L/C Meter IIB</li>
+      <li>Conceptually simple: Inserts DUT into a resonant tank circuit and measures frequency shift</li>
+      <li>Excellent for small capacitances, even &lt;10 pF</li>
+    </ul>
+  </div>
+</div> 
+
+</script></section>
+
 
 
 <section data-markdown><script type="text/template">
@@ -75,11 +165,11 @@ VE3HOY
 
 Impedance of an inductor increases with frequency:
 
-$${\it X\_L}=2\,\pi\,L\,f$$
+$${\it Z\_L}=2\,\pi\,L\,f$$
 
-Impedance of capacitor decreases with frequency:
+Impedance of a capacitor decreases with frequency:
 
-$${\it X\_C}={{1}\over{2\,\pi\,C\,f}}$$
+$${\it Z\_C}={{1}\over{2\,\pi\,C\,f}}$$
 </script></section>
 
 
@@ -135,10 +225,10 @@ $$f={{1}\over{2\,\pi\,\sqrt{L\,C}}}$$
 
 ## Problem
 
-* The initial values of L and C aren't known exactly
-* Say we read 5 MHz on the frequency counter:
+* Unfortunately, the initial values of L and C aren't known exactly
+* Suppose we read 5 MHz on the frequency counter:
 
-$$5 MHz ={{1}\over{2\,\pi\,\sqrt{L\,C}}}$$
+$$5\,000\,000 ={{1}\over{2\,\pi\,\sqrt{L\,C}}}$$
 
 </script></section>
 
@@ -150,14 +240,14 @@ There are an infinite combination of L and C values that can theoretically resul
 
 <img height="350" src="./graph.png" />
 
-(In practice, the values are constrained by the oscillator $Q$ value, which is related to $L/C$)
+(In practice, suitable values are constrained by the oscillator $Q$ value, which is related to $L/C$)
 
 </script></section>
 
 
 <section data-markdown><script type="text/template">
 
-## Solution
+## Solution: Calibration Step
 
 * Measure frequency before
 * Apply a capacitor with known capacitance to the circuit
@@ -233,17 +323,14 @@ function procCalc() {
 
   var lcb = 1 / (4 * Math.PI**2 * f_before**2);
   var lca = 1 / (4 * Math.PI**2 * f_after**2);
-console.log(lcb,lca);
 
   var l = (lca - lcb) / c_known;
   var c = lcb / l;
-console.log(l,c);
 
   document.getElementById("inductance").innerHTML = (l === l) ? (l * 1e6).toFixed(3) : '??';
   document.getElementById("c_before").innerHTML = (c === c) ? (c * 1e12).toFixed(1) : '??';
 
   var c_unknown = (1 / (4 * Math.PI**2 * f_measured**2 * l)) - c;
-console.log(c_unknown);
 
   if (c_unknown === c_unknown) document.getElementById("c_unknown").innerHTML = (c_unknown/1e-12).toFixed(1);
   else document.getElementById("c_unknown").innerHTML = '??';
