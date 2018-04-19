@@ -73,12 +73,28 @@ VE3HOY
 
 * Originally I was going to discuss a bunch of ways that LCR meters work. However there is far too much material to fit into a short talk!
 * Instead, I'll do a brief overview of:
+  * Direct I-V measurement
   * Bridge method
   * Square-wave method
 * And deep dive into:
   * Resonance method
 
 </script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Direct I-V measurement
+
+* Ohm's law: ${\it Z}={{V}\over{I}}$
+
+* Assuming purely capacitative load: ${\it C}={{1}\over{2\,\pi\,Z\,f}}$
+
+* I don't have much to say about this method except that you need precise and accurate meters, and a good impedance matching network
+
+</script></section>
+
 
 
 <section data-markdown><script type="text/template">
@@ -102,14 +118,14 @@ VE3HOY
 
 <section data-markdown><script type="text/template">
 
-Given a known frequency $f$ and impedance $Z$, capacitance can be computed:
-
-$${\it C}={{1}\over{2\,\pi\,Z\,f}}$$
+* Same as direct I-V, given a known frequency $f$ and impedance $Z$, then: $${\it C}={{1}\over{2\,\pi\,Z\,f}}$$
 
 * Modern designs use an op-amp instead of panel meter
 * Requires precisely known resistors and frequency
 
 </script></section>
+
+
 
 
 
@@ -134,7 +150,7 @@ $${\it C}={{1}\over{2\,\pi\,Z\,f}}$$
 
 * Also can measure ESR (the drop-offs on the red line) caused by lead resistance/dielectric heating loss
 * Mostly suitable for larger value capacitors since they need to have negligible impedance at square wave's frequency
-* I *think* this is how our kit devices we ordered will work (not sure yet)
+* I *think* this is how our kits we ordered will work (not sure yet)
 
 </script></section>
 
@@ -151,6 +167,7 @@ $${\it C}={{1}\over{2\,\pi\,Z\,f}}$$
       <li>Inspired by a really great kit I built years ago: AADE L/C Meter IIB</li>
       <li>Conceptually simple: Inserts capacitors or inductors into a resonant tank circuit and measures frequency shift</li>
       <li>Excellent for small capacitances, even &lt;10 pF</li>
+      <li>Easy to compensate for lead/parasitic impedance (ie with "Zero" button)</li>
     </ul>
   </div>
 </div> 
@@ -165,11 +182,11 @@ $${\it C}={{1}\over{2\,\pi\,Z\,f}}$$
 
 Impedance of an inductor increases with frequency:
 
-$${\it Z\_L}=2\,\pi\,L\,f$$
+$${\it Z}=2\,\pi\,L\,f$$
 
 Impedance of a capacitor decreases with frequency:
 
-$${\it Z\_C}={{1}\over{2\,\pi\,C\,f}}$$
+$${\it Z}={{1}\over{2\,\pi\,C\,f}}$$
 </script></section>
 
 
@@ -177,11 +194,11 @@ $${\it Z\_C}={{1}\over{2\,\pi\,C\,f}}$$
 
 ## Review: Resonance
 
-The resonant frequency is the frequency where the impedances are equal:
+The resonant frequency of a capacitor and an inductor is the frequency where their impedances are equal:
 
 $$2\,\pi\,L\,f={{1}\over{2\,\pi\,C\,f}}$$
 
-Solving for $f$:
+Solving for $f$ gives the resonance equation:
 
 $$f={{1}\over{2\,\pi\,\sqrt{L\,C}}}$$
 
@@ -215,7 +232,7 @@ Simple yet reliable design for LC oscillator:
 
 <section data-markdown><script type="text/template">
 
-## Test Setup
+## Our Test Setup
 
 <img style="background-color:white" width="70%" src="./hartley-schematic2.svg">
 
@@ -227,8 +244,8 @@ Simple yet reliable design for LC oscillator:
 
 ## Problem
 
-* Unfortunately, the initial values of L and C aren't known exactly
-* Suppose we read 5 MHz on the frequency counter:
+* Unfortunately, our oscillator's values of L and C aren't known exactly
+* Suppose our frequency counter tells us it is oscillating at 5 MHz:
 
 $$5\,000\,000 ={{1}\over{2\,\pi\,\sqrt{L\,C}}}$$
 
@@ -238,7 +255,7 @@ $$5\,000\,000 ={{1}\over{2\,\pi\,\sqrt{L\,C}}}$$
 
 <section data-markdown><script type="text/template">
 
-There are an infinite combination of L and C values that can result in this frequency:
+There are infinite combinations of L and C that can result in 5 MHz (or any other frequency):
 
 <img height="350" src="./graph.png" />
 
@@ -262,7 +279,7 @@ There are an infinite combination of L and C values that can result in this freq
 <section data-markdown><script type="text/template">
 
 
-Using the resonance equation $f={{1}\over{2\,\pi\,\sqrt{L\,C}}}$ with $f\_{before}$ and $f\_{after}$ gives:
+Using the resonance equation $f={{1}\over{2\,\pi\,\sqrt{L\,C}}}$ :
 
 $${\it LC\_{before}}={{1}\over{(2\,\pi\,f\_{before})^2}}$$
 
@@ -306,7 +323,7 @@ $${\it C\_{before}}={\it {L\,C\_{before}}\over{L}}$$
 
 Now that we have values for $L$ and $C\_{before}$, here is the equation we will use to measure unknown capacitors:
 
-$${\it C\_{unknown}}={{1}\over{(2\,\pi\,f)^2\,L}}-C\_{before}$$
+$${\it C\_{unknown}}={{1}\over{(2\,\pi\,f\_{measured})^2\,L}}-C\_{before}$$
 
 Phew, OK the math is over, let's have a demo!
 
