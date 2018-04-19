@@ -26,8 +26,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.4"
-     inkscape:cx="127.34948"
-     inkscape:cy="117.60329"
+     inkscape:cx="-4.7933771"
+     inkscape:cy="114.74615"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -39,7 +39,8 @@
      fit-margin-top="0"
      fit-margin-left="0"
      fit-margin-right="0"
-     fit-margin-bottom="0" />
+     fit-margin-bottom="0"
+     showguides="false" />
   <metadata
      id="metadata1379">
     <rdf:RDF>
@@ -48,7 +49,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -108,6 +109,6 @@
          id="tspan1994-2"
          x="22.465738"
          y="101.96967"
-         style="stroke-width:0.20599891">Measured voltage</tspan></text>
+         style="stroke-width:0.20599891">Capacitor voltage</tspan></text>
   </g>
 </svg>

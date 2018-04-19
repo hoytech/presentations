@@ -149,7 +149,7 @@ $${\it C}={{1}\over{2\,\pi\,Z\,f}}$$
   <div style="height: 100%; font-size: 90%">
     <ul>
       <li>Inspired by a really great kit I built years ago: AADE L/C Meter IIB</li>
-      <li>Conceptually simple: Inserts DUT into a resonant tank circuit and measures frequency shift</li>
+      <li>Conceptually simple: Inserts capacitors or inductors into a resonant tank circuit and measures frequency shift</li>
       <li>Excellent for small capacitances, even &lt;10 pF</li>
     </ul>
   </div>
@@ -238,7 +238,7 @@ $$5\,000\,000 ={{1}\over{2\,\pi\,\sqrt{L\,C}}}$$
 
 <section data-markdown><script type="text/template">
 
-There are an infinite combination of L and C values that can theoretically result in this frequency:
+There are an infinite combination of L and C values that can result in this frequency:
 
 <img height="350" src="./graph.png" />
 
@@ -254,44 +254,47 @@ There are an infinite combination of L and C values that can theoretically resul
 * Measure frequency before
 * Apply a capacitor with known capacitance to the circuit
 * Measure frequency after
-* Infer $L$ and $C$ from frequency change
+* Infer $L$ and $C$ of the tank circuit from frequency change
 
 </script></section>
 
 
 <section data-markdown><script type="text/template">
 
-Since we measured $F\_{before}$ and $F\_{after}$, we can use the resonance equations:
 
-$${\it LC\_{before}}={{1}\over{4\,\pi^2\,f\_{before}^2}}$$
+Using the resonance equation $f={{1}\over{2\,\pi\,\sqrt{L\,C}}}$ with $f\_{before}$ and $f\_{after}$ gives:
 
-$${\it LC\_{after}}={{1}\over{4\,\pi^2\,f\_{after}^2}}$$
+$${\it LC\_{before}}={{1}\over{(2\,\pi\,f\_{before})^2}}$$
 
-And we also know:
+$${\it LC\_{after}}={{1}\over{(2\,\pi\,f\_{after})^2}}$$
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+Because we added the calibration capacitor:
 
 $${\it C\_{after}}={\it C\_{before}}+{\it C\_{known}}$$
 
+Now we can calculate $L$ in terms of known quantities:
+
+$${\it L\,C\_{after}}={\it L\,(C\_{before}}+{\it C\_{known})}$$
+
+$${\it L\,C\_{after}}={\it L\,C\_{before}}+{\it L\,C\_{known}}$$
+
+$${\it L\,C\_{after} - L\,C\_{before}}={\it L\,C\_{known}}$$
+
+$${\it L}={\it {L\,C\_{after} - L\,C\_{before}}\over{C\_{known}}}$$
+
 </script></section>
 
 
 
 <section data-markdown><script type="text/template">
 
-Now we can calculate $L$:
-
-$${\it L\,C\_{after}}={\it L\,(C\_{before}}+{\it C\_{known})}$$
-
-<!--
-$${\it L\,C\_{after}}={\it L\,C\_{before}}+{\it L\,C\_{known}}$$
-
-$${\it L\,C\_{after} - L\,C\_{before}}={\it L\,C\_{known}}$$
--->
-
-$${\it L}={\it {L\,C\_{after} - L\,C\_{before}}\over{C\_{known}}}$$
-
-<p style="margin-top: 50px">
-And then $C\_{before}$:
-</p>
+With $L$, it's easy to get $C\_{before}$:
 
 $${\it C\_{before}}={\it {L\,C\_{before}}\over{L}}$$
 
@@ -301,9 +304,9 @@ $${\it C\_{before}}={\it {L\,C\_{before}}\over{L}}$$
 
 <section data-markdown><script type="text/template">
 
-Finally, now we can calculate unknown capacitor values:
+Now that we have values for $L$ and $C\_{before}$, here is the equation we will use to measure unknown capacitors:
 
-$${\it C\_{unknown}}={{1}\over{4\,\pi^2\,f^2\,L}}-C\_{before}$$
+$${\it C\_{unknown}}={{1}\over{(2\,\pi\,f)^2\,L}}-C\_{before}$$
 
 Phew, OK the math is over, let's have a demo!
 
