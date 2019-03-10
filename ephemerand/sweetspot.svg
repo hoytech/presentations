@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="197.15594mm"
+   height="47.816059mm"
+   viewBox="0 0 197.15594 47.816059"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   sodipodi:docname="sweetspot.svg">
+  <defs
+     id="defs2" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.4"
+     inkscape:cx="414.27072"
+     inkscape:cy="28.288323"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1920"
+     inkscape:window-height="1029"
+     inkscape:window-x="0"
+     inkscape:window-y="25"
+     inkscape:window-maximized="1"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-2.2368506,-10.349944)">
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:11.31332874px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.28283322"
+       x="8.0840855"
+       y="36.549236"
+       id="text821"><tspan
+         sodipodi:role="line"
+         id="tspan819"
+         x="8.0840855"
+         y="36.549236"
+         style="stroke-width:0.28283322"><tspan
+   style="fill:#ff0000;stroke-width:0.28283322"
+   id="tspan845">1100101</tspan>001<tspan
+   style="fill:#008000;stroke-width:0.28283322"
+   id="tspan849">1010110110</tspan>010<tspan
+   style="fill:#ff0000;stroke-width:0.28283322"
+   id="tspan847">1110111</tspan></tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.58333302px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="15.005653"
+       y="19.905655"
+       id="text825"><tspan
+         sodipodi:role="line"
+         id="tspan823"
+         x="15.005653"
+         y="19.905655"
+         style="stroke-width:0.26458332">MSB</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.58333302px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="170.86037"
+       y="19.260216"
+       id="text825-5"><tspan
+         sodipodi:role="line"
+         id="tspan823-4"
+         x="170.86037"
+         y="19.260216"
+         style="stroke-width:0.26458332">LSB</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:8.8258009px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:0.22064503"
+       x="2.2627075"
+       y="53.306358"
+       id="text853"><tspan
+         sodipodi:role="line"
+         id="tspan851"
+         x="2.2627075"
+         y="53.306358"
+         style="fill:#ff0000;stroke-width:0.22064503">Too predictable</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:8.8258009px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:0.22064503"
+       x="144.84105"
+       y="53.485752"
+       id="text853-8"><tspan
+         sodipodi:role="line"
+         x="144.84105"
+         y="53.485752"
+         style="fill:#ff0000;stroke-width:0.22064503"
+         id="tspan877">Too biasable</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:12.41452599px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#008000;fill-opacity:1;stroke:none;stroke-width:0.31036314"
+       x="79.091805"
+       y="51.992912"
+       id="text883"><tspan
+         sodipodi:role="line"
+         id="tspan881"
+         x="79.091805"
+         y="51.992912"
+         style="fill:#008000;stroke-width:0.31036314">Just right</tspan></text>
+  </g>
+</svg>

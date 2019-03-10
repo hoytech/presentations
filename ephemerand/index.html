@@ -85,9 +85,9 @@ How to generate random numbers in decentralized (adversarial) environment
 
 * PoW Block hashes (miners can bias)
 * Commit-reveal (last revealer bias)
-* VDF (trusted setup, needs tuning)
+* VDF (trusted setup, delay needs tuning)
 * NIST random beacon (must trust NIST)
-* Financial data/lotteries (impractical)
+* Financial data/lottery numbers (impractical)
 
 </script></section>
 
@@ -165,25 +165,30 @@ Less than $10
 
 
 
+
 <section data-markdown><script type="text/template">
 
-## Command-line app
+## The sweet spot
 
-    $ ephemerand run
-    rand 0936e456684... 2044.147456 1552323456
+<img style="background-color:white" width="90%" src="./sweetspot.svg">
 
-Fields:
+</script></section>
 
-         ^^^^^^^^^^^    ^^^^^^^^^^^ ^^^^^^^^^^
-         randomness     GPS date    unix timestamp
+
+<section data-markdown><script type="text/template">
+
+## ephemerand
+
+* C++ command-line app
+* Uses ublox 6/7/8 GPS chipset
+* Collects full almanac and hashes with BLAKE-2b
 
 </script></section>
 
 
 
-<section data-markdown><script type="text/template">
 
-## verbose mode
+<section data-markdown><script type="text/template">
 
     $ ephemerand run --verbose
     # Connection OK. SW: 1.00 (59842) HW: 00070000
@@ -197,6 +202,30 @@ Fields:
     rand 0936e456684b04edd449bad5c8aba51e28a5adc98d4f20e560af668644f23665 2044.147456 1552323456
 
 </script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+Tested: Same random numbers were generated in Canada and Thailand
+
+<img style="background-color:white" width="50%" src="./azimuthal.jpg">
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Other benefits
+
+* No internet required
+  * Same random numbers used even with network partitions
+* Every ephemerand node also has very accurate UTC clock available
+
+</script></section>
+
 
 
 
