@@ -59,6 +59,8 @@
 
 # ephemerand
 
+global randomness beacon
+
 Doug Hoyte
 
 </script></section>
@@ -83,7 +85,7 @@ How to generate random numbers in decentralized (adversarial) environment
 
 ## Other Approaches
 
-* PoW Block hashes (miners can bias)
+* PoW block hashes (miners can bias)
 * Commit-reveal (last revealer can bias)
 * VDF (trusted setup, delay needs tuning)
 * NIST random beacon (must trust NIST)
@@ -116,7 +118,7 @@ Once per day the US military measures attributes of the GPS system:
 
 * Broadcast via the GPS satellites
   * Download in 20 minutes from anywhere on earth's surface
-* Published on government websites (historical data back to 1990)
+* Published on websites (historical data back to 1990)
 * Available via cell-phone network (aGPS)
  
 </script></section>
@@ -144,7 +146,7 @@ Less than $10
 * 31 active satellites
 * 10 parameters per satellite
 * Being able to predict far in advance would be major applied physics break-through
-  * This needs more research
+  * Is this true? Needs more research
 
 </script></section>
 
@@ -231,6 +233,9 @@ Tested: Same random numbers were generated in Canada and Thailand
 <section data-markdown><script type="text/template">
 
 # Thank you
+
+Download ephemerand:<br/>
+[https://github.com/hoytech/ephemerand/](https://github.com/hoytech/ephemerand/)
 
 This presentation:<br/>
 [https://hoytech.github.io/presentations/ephemerand/](https://hoytech.github.io/presentations/ephemerand/)
