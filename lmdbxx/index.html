@@ -142,12 +142,12 @@ Doug Hoyte
 
 ## Open/create DBs
 
-    lmdb::dbi emails;
+    lmdb::dbi emailsDbi;
 
     {
         auto txn = lmdb::txn::begin(env);
 
-        dbi = lmdb::dbi::open(txn, "emails", MDB_CREATE);
+        emailsDbi = lmdb::dbi::open(txn, "emails", MDB_CREATE);
 
         txn.commit();
     }
@@ -165,7 +165,7 @@ Doug Hoyte
     {   
         auto txn = lmdb::txn::begin(env);
 
-        emails.put(txn, "doug", "doug@hcsw.org");
+        emailsDbi.put(txn, "doug", "doug@hcsw.org");
 
         txn.commit();
     }
@@ -182,7 +182,7 @@ Doug Hoyte
         auto txn = lmdb::txn::begin(env, nullptr, MDB_RDONLY);
 
         std::string_view email;
-        mydb.get(txn, "doug", email);
+        emailsDbi.get(txn, "doug", email);
 
         // email points into memory mapped file
     }
