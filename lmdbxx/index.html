@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+
+    <title>lmdb++</title>
+
+    <meta name="author" content="Doug Hoyte">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <link rel="stylesheet" href="../reveal.js/css/reveal.css">
+    <link rel="stylesheet" href="../reveal.js/css/theme/black.css" id="theme">
+
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="../reveal.js/lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+      var link = document.createElement( 'link' );
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = window.location.search.match( /print-pdf/gi ) ? '../reveal.js/css/print/pdf.css' : '../reveal.js/css/print/paper.css';
+      document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="../reveal.js/lib/js/html5shiv.js"></script>
+    <![endif]-->
+
+    <style>
+      .reveal .slides h1, .reveal .slides h2, .reveal .slides h3 {
+        text-transform: none;
+      }
+
+      .two-column {
+        display: flex;
+        flex-wrap: wrap;
+      }
+
+      .two-column em {
+        margin: 20px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="reveal">
+      <div class="slides">
+
+<!------------------------------------------------------->
+
+
+
+<section data-markdown><script type="text/template">
+
+# lmdb++
+
+## C++17 bindings for LMDB
+
+Doug Hoyte
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## LMDB
+
+* Embedded key-value database
+* A small C library
+* "Single-level store"
+  * Uses the filesystem cache as its only memory cache
+  * Works by `mmap()`ing a file
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## LMDB benefits
+
+* ACID transactions
+* No tuning needed for OLTP workloads
+* MVCC, no locks, scales perfectly with multiple processes/threads
+* Always instant crash recovery
+  * No write-ahead log (or write amplification)
+  * Instant start-up (even post-crash)
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## Example: read() JSON file
+
+<img src="arch-read2.svg" style="background-color: white;" />
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Example: mmap() JSON file
+
+<img src="arch-mmap.svg" style="background-color: white;" />
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Example: flatbuffers in LMDB
+
+<img src="arch-lmdb.svg" style="background-color: white;" />
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Open environment
+
+    auto env = lmdb::env::create();
+    env.open("./example.mdb/", 0, 0664);
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Open/create DBs
+
+    lmdb::dbi emails;
+
+    {
+        auto txn = lmdb::txn::begin(env);
+
+        dbi = lmdb::dbi::open(txn, "emails", MDB_CREATE);
+
+        txn.commit();
+    }
+
+* Transaction objects managed by RAII
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Add a record
+
+    {   
+        auto txn = lmdb::txn::begin(env);
+
+        emails.put(txn, "doug", "doug@hcsw.org");
+
+        txn.commit();
+    }
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Get a record
+
+    {
+        auto txn = lmdb::txn::begin(env, nullptr, MDB_RDONLY);
+
+        std::string_view email;
+        mydb.get(txn, "doug", email);
+
+        // email points into memory mapped file
+    }
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## Everything else you need
+
+* Cursors
+* Dup records for building indices 
+* Custom comparators
+* Can guarantee alignment for SIMD support
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+# Thank you
+
+lmdbxx github repo:<br/>
+[https://github.com/hoytech/lmdbxx/](https://github.com/hoytech/lmdbxx/)
+
+This presentation:<br/>
+[https://hoytech.github.io/presentations/lmdbxx/](https://hoytech.github.io/presentations/lmdbxx/)
+
+</script></section>
+
+
+
+
+<!------------------------------------------------------->
+
+
+      </div>
+
+    </div>
+
+    <script src="../reveal.js/lib/js/head.min.js"></script>
+    <script src="../reveal.js/js/reveal.js"></script>
+
+    <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        transition: 'none', // none/fade/slide/convex/concave/zoom
+
+	math: {
+          mathjax: '../lib/MathJax/MathJax.js',
+          config: 'TeX-AMS_SVG-full',
+	},
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: '../reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../reveal.js/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: '../reveal.js/plugin/math/math.js', async: true },
+        ]
+      });
+
+    </script>
+
+  </body>
+</html>
