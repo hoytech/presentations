@@ -88,13 +88,19 @@ Doug Hoyte
 ## LMDB benefits
 
 * ACID transactions
-* No tuning needed for OLTP workloads
-* MVCC, no locks, scales perfectly with multiple processes/threads
-* Always instant crash recovery
+* Doesn't need tuning or maintenance
+* No locks in read path (MVCC)
+  * Scales optimally with multiple processes/threads
+* Instant crash recovery
   * No write-ahead log (or write amplification)
   * Instant start-up (even post-crash)
 
 </script></section>
+
+
+
+
+
 
 
 <section data-markdown><script type="text/template">
@@ -124,6 +130,22 @@ Doug Hoyte
 <img src="arch-lmdb.svg" style="background-color: white;" />
 
 </script></section>
+
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## C++ Bindings
+
+* Complete support for LMDB library features
+* Most errors are converted to exceptions
+* RAII management of all resources
+* `std::string_view`
+
+</script></section>
+
 
 
 
@@ -188,6 +210,7 @@ Doug Hoyte
     }
 
 </script></section>
+
 
 
 
