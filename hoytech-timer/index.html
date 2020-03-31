@@ -44,6 +44,10 @@
       .two-column em {
         margin: 20px;
       }
+
+      a {
+        font-size: 90% !important;
+      }
     </style>
   </head>
 
@@ -72,7 +76,7 @@ Doug Hoyte
 
 ## Simple lambda callbacks
 
-    #include "timer.h"
+    #include <hoytech/timer.h>
 
     int main() {
         hoytech::timer t;
@@ -144,7 +148,7 @@ Doug Hoyte
 ## repeat_maybe
 
     t.repeat_maybe(500'000, [count(0)]() mutable {
-        std::cout << "Counting up to 5: " << ++count << std::endl;
+        std::cout << "Counting to 5: " << ++count << std::endl;
         return count < 5;
     });
 
