@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+
+    <title>On-Chain Median Pricing Oracles</title>
+
+    <meta name="author" content="Doug Hoyte">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <link rel="stylesheet" href="../reveal.js/css/reveal.css">
+    <link rel="stylesheet" href="../reveal.js/css/theme/black.css" id="theme">
+
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="../reveal.js/lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+      var link = document.createElement( 'link' );
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = window.location.search.match( /print-pdf/gi ) ? '../reveal.js/css/print/pdf.css' : '../reveal.js/css/print/paper.css';
+      document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="../reveal.js/lib/js/html5shiv.js"></script>
+    <![endif]-->
+
+    <style>
+      .reveal .slides h1, .reveal .slides h2, .reveal .slides h3 {
+        text-transform: none;
+      }
+
+      .container {
+        display: flex;
+      }
+
+      .container > div {
+        flex: 1;
+      }
+
+      .left {
+        left:-8.33%;
+        text-align: left;
+        float: left;
+        width:50%;
+        z-index:-10;
+      }
+
+      .right {
+        left:31.25%;
+        top: 75px;
+        text-align: left;
+        float: right;
+        z-index:-10;
+        width:50%;
+      }
+
+      .small-text {
+        font-size: 85%;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="reveal">
+      <div class="slides">
+
+<!------------------------------------------------------->
+
+
+
+<section data-markdown><script type="text/template">
+
+# On-Chain Median Pricing Oracles
+
+Doug Hoyte (Euler XYZ)
+
+<img style="border: none; background-color: #222" width="200px" src="BOS_Logo.svg" />
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## Objective Pricing
+
+* Data that can be verified by reading on-chain history
+* Prices for on-chain assets are good example
+* If actually tradeable quoted prices are used, then we can rely on prices because if they were wrong, self-interested arbitrageurs would fix them
+  * Requires assumption that transactions are not being censored
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Brief History of On-Chain Price Oracles
+
+* Bancor/DDEX/ETH2DAI/Uniswap 1
+  * Simply read the current price quote
+  * <span style="font-size: 60%">&#x274c;</span> Insecure
+* Uniswap 2
+  * Arithmetic TWAP, external storage
+  * <span style="color:green;">&check;</span> Secure <span style="color:#008A00; font-size: 60%">&#x274c;</span> Impractical
+* Uniswap 3
+  * Geometric TWAP, internal storage
+  * <span style="color:green;">&check;</span> Secure <span style="color:green;">&check;</span> Practical <span style="color:#008A00; font-size: 60%">&#x274c;</span> Inefficient
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Why not just read a quote?
+
+Inside of one atomic transaction, an attacker can:
+
+* Make gigantic trade on exchange to move price
+* Invoke victim contract
+  * Uses incorrect price (maybe issues loan)
+* Make opposite trade on exchange to move price back
+
+*No arb risk -- attacker just pays swap fees*
+
+*Doesn't even need any up-front capital: flash loans*
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## TWAP
+
+* Time-Weighted Average Price
+  * Push the price onto a list every second, then take average of most recent N prices
+* Immune to atomic transaction attacks (and flash loans), because only updated at "end of block"
+* Furthermore, attacker must hold bad price for long enough to impact the average
+
+</script></section>
+
+
+
+<section>
+
+<p data-markdown>
+## TWAP Accumulators
+</p>
+
+<div class="left">
+    <img style="background-color: white;" src="uniswap-twap3.svg" />
+</div>
+
+<div class="right small-text"><p data-markdown>
+* Numbers that increase every second by the current price
+* Subtracting two accumulator snapshots gives sum of prices every second (area under curve)
+* Divide area by time to get average price
+</p></div>
+
+</section>
+
+
+
+<section>
+
+<p data-markdown>
+## Ring Buffers
+</p>
+
+<div class="left">
+    <img style="background-color: white;" src="ring-buffer.svg" />
+</div>
+
+<div class="right small-text"><p data-markdown>
+* Uniswap 2 required contracts keep their own accumulator snapshots
+  * Very hard to use
+* Uniswap 3 keeps N most recent snapshots internally in its storage, using a ring-buffer data structure
+  * Much easier to use
+</p></div>
+
+</section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## Attacks on TWAPs
+
+* Because TWAPs incorporate every price in the time window, very large outliers can cause large changes in TWAP
+* If an attacker can move a price significantly at the end of a block, and move it back immediately at the start of next block, can affect TWAP enough for attack
+  * Low risk of arbitrage
+  * The more blocks controlled the better
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## Multi-Block Attacks
+
+* If attack is big enough, attacker can just pay off the arbitrageurs each block
+* Miners can control multiple blocks with "selfish mining" (withholding solved blocks until multiple found)
+* Partially possible with flashbots
+* Big changes coming to consensus that may make these attacks even cheaper:
+  * Proof Of Stake
+  * MEV Boost
+
+</script></section>
+
+
+
+
+<section>
+
+<p data-markdown>
+## Median Filters
+</p>
+
+<div class="left">
+    <img style="background-color: white;" src="median-filter.png" />
+</div>
+
+<div class="right small-text"><p data-markdown>
+* Image processing technique to get rid of "salt-and-pepper" noise
+* Outlier impulses are replaced with median of their neighbouring pixel values
+</p></div>
+
+</section>
+
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## Goals for our new Oracle
+
+* "Time-Weighted Median Price" to protect against future attacks
+  * Also support computing regular TWAP
+* To be as gas-efficient as possible
+  * Much lower than Uniswap3 in typical cases
+  * Competitive with Chainlink, etc
+  * Manageable worst-case gas usage
+
+</script></section>
+
+
+
+
+<!--
+
+Brief History of On-Chain Oracles
+TWAP
+  * Attacks against
+  * Arithmetic vs geometric
+Chainlink
+Median
+  * Median filtering
+  * Algorithm
+Uniswap3 Implementation
+Ring buffers
+Our implementation
+  * Quantisation
+  * Packing
+  * Quick select
+Gas usage
+
+-->
+
+
+
+
+
+<!------------------------------------------------------->
+
+
+      </div>
+
+    </div>
+
+    <script src="../reveal.js/lib/js/head.min.js"></script>
+    <script src="../reveal.js/js/reveal.js"></script>
+
+    <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        transition: 'none', // none/fade/slide/convex/concave/zoom
+
+	math: {
+          mathjax: '../lib/MathJax/MathJax.js',
+          config: 'TeX-AMS_SVG-full',
+	},
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: '../reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../reveal.js/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: '../reveal.js/plugin/math/math.js', async: true },
+        ]
+      });
+
+    </script>
+
+  </body>
+</html>
