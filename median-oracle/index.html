@@ -103,7 +103,7 @@ Doug Hoyte (Euler XYZ)
 
 <section data-markdown><script type="text/template">
 
-## Brief History of On-Chain Price Oracles
+### Brief History of On-Chain Price Oracles
 
 * Bancor/DDEX/ETH2DAI/Uniswap 1
   * Simply read the current price quote
@@ -130,9 +130,9 @@ Inside of one atomic transaction, an attacker can:
   * Uses incorrect price (maybe issues loan)
 * Make opposite trade on exchange to move price back
 
-*No arb risk -- attacker just pays swap fees*
+*No arb risk &mdash; attacker just pays swap fees*
 
-*Doesn't even need any up-front capital: flash loans*
+*Doesn't even need any up-front capital &mdash; flash loans*
 
 </script></section>
 
@@ -211,11 +211,11 @@ Inside of one atomic transaction, an attacker can:
 
 ## Multi-Block Attacks
 
-* If attack is big enough, attacker can just pay off the arbitrageurs each block
-* Miners can control multiple blocks with "selfish mining" (withholding solved blocks until multiple found)
+* Miners can control multiple blocks with "selfish mining" (withholding solved blocks until several found)
 * Partially possible with flashbots
-* Big changes coming to consensus that may make these attacks even cheaper:
-  * Proof Of Stake
+* If attack is profitable enough, attacker could just pay off the arbitrageurs each block
+* Big changes coming that could make multi-block attacks cheaper/easier:
+  * Proof of Stake
   * MEV Boost
 
 </script></section>
@@ -252,10 +252,166 @@ Inside of one atomic transaction, an attacker can:
   * Also support computing regular TWAP
 * To be as gas-efficient as possible
   * Much lower than Uniswap3 in typical cases
-  * Competitive with Chainlink, etc
+  * Competitive with Chainlink etc
   * Manageable worst-case gas usage
 
 </script></section>
+
+
+
+
+<section>
+
+<h2>Quantisation</h2>
+
+<div style="display: flex">
+    <img style="border: 0px; height: 500px" src="quantisation.png" />
+    <div class="small-text" data-markdown>
+* "Quantise" prices to 0.3% precision
+* Uniswap3: 0.01%
+* Chainlink: ~1%
+* Prices pack into 2 bytes of storage
+    </div>
+</div>
+
+</section>
+
+
+
+
+
+<section>
+
+<div style="display: flex">
+    <img style="background-color: white;" src="binary-search.svg" />
+    <div data-markdown>
+      * Uniswap3 searches ring-buffer with binary search 
+      * Searches for newest accumulator record older than the requested window, interpolates value
+      * Good for limiting worst-case number of storage reads
+    </div>
+</div>
+
+</section>
+
+
+
+
+<section>
+
+<div style="display: flex">
+    <img style="background-color: white;" src="linear-search.svg" />
+    <div data-markdown>
+      * Our Oracle uses simple linear search
+      * Doesn't use accumulators: aggregates data as it scans
+      * Especially since we pack 8 prices per slot, typically needs fewer storage reads
+    </div>
+</div>
+
+</section>
+
+
+
+
+<section>
+
+<h2>Weighted Median</h2>
+
+<div style="display: flex">
+    <img style="background-color: white;" src="weighted-median.svg" />
+    <div data-markdown>
+      * Conceptually how to compute weighted median:
+        * Sort price periods by price
+        * Line them up
+        * Find period overlapping mid-point
+    </div>
+</div>
+
+</section>
+
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## Gas Simulations
+
+* We created a simulation that compares our new Oracle against Uniswap3
+* Our Oracle is computing *both* TWAP and Median, Uniswap3 only TWAP
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+### Best case: Stable/Stable
+
+<img style="border: 0px; height: 500px" src="gas-usage-usdc-dai.png" />
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+### USDC/WETH, "Normal" Period
+
+<img style="border: 0px; height: 500px" src="gas-usage-usdc-weth-normal-period.png" />
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+### WBTC/WETH, Crash of May 12th
+
+<img style="border: 0px; height: 500px" src="gas-usage-wbtc-weth.png" />
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+### USDC/WETH, During Crash
+
+<img style="border: 0px; height: 500px" src="gas-usage-usdc-weth.png" />
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## Worst Cases
+
+* The previous slide shows the worst real-world performance we have observed
+* Illustrates the biggest disadvantage of the oracle:
+  * Higher worst-case gas usage
+* A few things to do, for example reduce window size (see next slide)
+  * Feasible because shorter windows are feasible with median
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+### USDC/WETH, Shorter Window
+
+<img style="border: 0px; height: 500px" src="gas-usage-usdc-weth-10min-window.png" />
+
+</script></section>
+
+
+
+
+
 
 
 
