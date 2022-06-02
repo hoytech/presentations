@@ -77,11 +77,16 @@
 
 <section data-markdown><script type="text/template">
 
-# On-Chain Median Pricing Oracles
+## On-Chain Median Pricing Oracles
 
-Doug Hoyte (Euler XYZ)
+<div style="margin-top: 50px">Doug Hoyte (Euler XYZ)</div>
 
-<img style="border: none; background-color: #222" width="200px" src="BOS_Logo.svg" />
+<div style="margin-top: 30px" class="small-text">Blockchain Oracle Summit: Berlin</div>
+
+<div style="margin-top: 30px; display: flex; justify-content: space-evenly">
+    <img style="border: none; background-color: #191919" width="200px" src="euler.svg" />
+    <img style="border: none; background-color: #191919" width="200px" src="BOS_Logo.svg" />
+</div>
 
 </script></section>
 
@@ -128,7 +133,7 @@ Inside of one atomic transaction, an attacker can:
 * Make gigantic trade on exchange to move price
 * Invoke victim contract
   * Uses incorrect price (maybe issues loan)
-* Make opposite trade on exchange to move price back
+* Make opposite trade on exchange to move price back and recover funds
 
 *No arb risk &mdash; attacker just pays swap fees*
 
@@ -140,11 +145,10 @@ Inside of one atomic transaction, an attacker can:
 
 <section data-markdown><script type="text/template">
 
-## TWAP
+## Time-Weighted Average Price
 
-* Time-Weighted Average Price
-  * Push the price onto a list every second, then take average of most recent N prices
-* Immune to atomic transaction attacks (and flash loans), because only updated at "end of block"
+* Concept: Push the price onto a list every second, then take average of most recent N prices
+* Immune to atomic transaction attacks (and flash loans), because 0 seconds elapse "during a block"
 * Furthermore, attacker must hold bad price for long enough to impact the average
 
 </script></section>
@@ -171,24 +175,6 @@ Inside of one atomic transaction, an attacker can:
 
 
 
-<section>
-
-<p data-markdown>
-## Ring Buffers
-</p>
-
-<div class="left">
-    <img style="background-color: white;" src="ring-buffer.svg" />
-</div>
-
-<div class="right small-text"><p data-markdown>
-* Uniswap 2 required contracts keep their own accumulator snapshots
-  * Very hard to use
-* Uniswap 3 keeps N most recent snapshots internally in its storage, using a ring-buffer data structure
-  * Much easier to use
-</p></div>
-
-</section>
 
 
 
@@ -198,7 +184,7 @@ Inside of one atomic transaction, an attacker can:
 ## Attacks on TWAPs
 
 * Because TWAPs incorporate every price in the time window, very large outliers can cause large changes in TWAP
-* If an attacker can move a price significantly at the end of a block, and move it back immediately at the start of next block, can affect TWAP enough for attack
+* If an attacker can move a price significantly at the end of a block, and move it back immediately at the start of next block, it can affect TWAP enough for attack
   * Low risk of arbitrage
   * The more blocks controlled the better
 
@@ -243,14 +229,33 @@ Inside of one atomic transaction, an attacker can:
 
 
 
+<section>
+
+<h2>Time-Weighted Median Price</h2>
+
+<div style="display: flex">
+    <img style="background-color: white;" src="weighted-median.svg" />
+    <div data-markdown>
+      * How to compute weighted median:
+        * Sort periods by price
+        * Line them up
+        * Find period overlapping mid-point
+    </div>
+</div>
+
+</section>
+
+
+
+
 
 <section data-markdown><script type="text/template">
 
 ## Goals for our new Oracle
 
-* "Time-Weighted Median Price" to protect against future attacks
-  * Also support computing regular TWAP
-* To be as gas-efficient as possible
+* Time-Weighted Median Prices to harden against consensus-level attacks
+  * Also should support computing (geo) TWAP
+* As gas-efficient as possible
   * Much lower than Uniswap3 in typical cases
   * Competitive with Chainlink etc
   * Manageable worst-case gas usage
@@ -273,6 +278,44 @@ Inside of one atomic transaction, an attacker can:
 * Prices pack into 2 bytes of storage
     </div>
 </div>
+
+</section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Relative Timestamps
+
+* Uniswap3 stores absolute timestamps (4 bytes)
+* Our oracle stores timestamps relative to the previous record
+* By restricting max window size to 2<sup>8</sup> (~18 hours), no need to store longer timestamps
+  * Can pack them in 2 bytes
+* Price+Timestamp = 4 bytes
+  * Can pack 8 of them in 32-byte storage slot
+
+</script></section>
+
+
+
+
+
+<section>
+
+<p data-markdown>
+## Ring Buffers
+</p>
+
+<div class="left">
+    <img style="background-color: white;" src="ring-buffer.svg" />
+</div>
+
+<div class="right small-text"><p data-markdown>
+* Uniswap 2 required contracts keep their own accumulator snapshots
+  * Very hard to use
+* Uniswap 3 keeps N most recent snapshots internally in its storage, using a ring-buffer data structure
+  * Much easier to use
+</p></div>
 
 </section>
 
@@ -312,46 +355,33 @@ Inside of one atomic transaction, an attacker can:
 
 
 
-<section>
 
-<h2>Weighted Median</h2>
+<section data-markdown><script type="text/template">
 
-<div style="display: flex">
-    <img style="background-color: white;" src="weighted-median.svg" />
-    <div data-markdown>
-      * Conceptually how to compute weighted median:
-        * Sort price periods by price
-        * Line them up
-        * Find period overlapping mid-point
-    </div>
-</div>
+## Simulations
 
+* We created a simulation that compares our new Oracle against Uniswap3
+* Uses real event log data from Uniswap3 on Ethereum mainnet
+
+</script></section>
+
+
+
+<section data-background="simulation.png">
 </section>
 
 
 
-
-
 <section data-markdown><script type="text/template">
 
-## Gas Simulations
+## Simulationing Gas Usage
 
-* We created a simulation that compares our new Oracle against Uniswap3
-* Our Oracle is computing *both* TWAP and Median, Uniswap3 only TWAP
-
-</script></section>
-
-
-
-
-<section data-markdown><script type="text/template">
-
-### Best case: Stable/Stable
-
-<img style="border: 0px; height: 500px" src="gas-usage-usdc-dai.png" />
+* Our simulation also measures how much gas it costs to read the oracle
+  * Writes are identical to Uniswap3
+* Uniswap3 is computing TWAP
+* Our Oracle is computing both TWAP *and* Median
 
 </script></section>
-
 
 
 
@@ -363,6 +393,15 @@ Inside of one atomic transaction, an attacker can:
 
 </script></section>
 
+
+
+<section data-markdown><script type="text/template">
+
+### Best case: Stable/Stable
+
+<img style="border: 0px; height: 500px" src="gas-usage-usdc-dai.png" />
+
+</script></section>
 
 
 
@@ -379,7 +418,7 @@ Inside of one atomic transaction, an attacker can:
 
 <section data-markdown><script type="text/template">
 
-### USDC/WETH, During Crash
+### USDC/WETH, Crash of May 12th
 
 <img style="border: 0px; height: 500px" src="gas-usage-usdc-weth.png" />
 
@@ -388,11 +427,11 @@ Inside of one atomic transaction, an attacker can:
 
 <section data-markdown><script type="text/template">
 
-## Worst Cases
+## Worst Case Gas Usage
 
-* The previous slide shows the worst real-world performance we have observed
-* Illustrates the biggest disadvantage of the oracle:
-  * Higher worst-case gas usage
+* The previous slide shows the worst real-world performance we have simulated
+* Illustrates the major disadvantage of our oracle:
+  * High worst case gas usage
 * A few things to do, for example reduce window size (see next slide)
   * Feasible because shorter windows are feasible with median
 
@@ -402,9 +441,77 @@ Inside of one atomic transaction, an attacker can:
 
 <section data-markdown><script type="text/template">
 
-### USDC/WETH, Shorter Window
+##### USDC/WETH, Crash of May 12th, Shorter Window
 
 <img style="border: 0px; height: 500px" src="gas-usage-usdc-weth-10min-window.png" />
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Where Does the Gas Go?
+
+* Two main cost centres:
+  * Loading the ring buffer entries from storage
+  * Computing the weighted median
+* Following slide shows the cost relative to the number of entries loaded
+  * Interpret as: 0.3%+ price change in N blocks within the window (30 min)
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+<img src="gas-growth.png" />
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## QuickSelect
+
+* The algorithm we use to find the weighted median is a variant of QuickSelect, which is a variant of QuickSort
+* Doesn't need to sort whole array
+* In most cases runs in O(N), but some worst case input causes it to degrade to O(N^2)
+  * Problem is bad choice of "pivot"
+  * See next slide
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+<img src="pivot-selection.png" />
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## O(N^2) Mitigation
+
+* This won't come up naturally, so would be an adversarial input, probably using an adversarial token
+* Solution: Choose pivot index using a PRNG
+  * Possible seed: hash together `msg.sender` and previous block hash
+  * Makes targetting multiple users impossible, and attack would only apply for one block
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Thank You!
+
+[https://github.com/euler-xyz/median-oracle](https://github.com/euler-xyz/median-oracle)
 
 </script></section>
 
