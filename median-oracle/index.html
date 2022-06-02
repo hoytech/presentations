@@ -433,7 +433,7 @@ Inside of one atomic transaction, an attacker can:
 * Illustrates the major disadvantage of our oracle:
   * High worst case gas usage
 * A few things to do, for example reduce window size (see next slide)
-  * Feasible because shorter windows are feasible with median
+  * Feasible because shorter windows are still secure with median
 
 </script></section>
 
@@ -478,7 +478,7 @@ Inside of one atomic transaction, an attacker can:
 
 * The algorithm we use to find the weighted median is a variant of QuickSelect, which is a variant of QuickSort
 * Doesn't need to sort whole array
-* In most cases runs in O(N), but some worst case input causes it to degrade to O(N^2)
+* In most cases runs in O(N), but some worst case input causes it to degrade to O(N<sup>2</sup>)
   * Problem is bad choice of "pivot"
   * See next slide
 
@@ -496,7 +496,7 @@ Inside of one atomic transaction, an attacker can:
 
 <section data-markdown><script type="text/template">
 
-## O(N^2) Mitigation
+## O(N<sup>2</sup>) Mitigation
 
 * This won't come up naturally, so would be an adversarial input, probably using an adversarial token
 * Solution: Choose pivot index using a PRNG
@@ -512,6 +512,8 @@ Inside of one atomic transaction, an attacker can:
 ## Thank You!
 
 [https://github.com/euler-xyz/median-oracle](https://github.com/euler-xyz/median-oracle)
+
+[https://hoytech.github.io/presentations/median-oracle/](https://hoytech.github.io/presentations/median-oracle/)
 
 </script></section>
 
