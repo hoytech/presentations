@@ -216,7 +216,7 @@
 
 <img src="sparse.svg" style="background-color: white" />
 
-* Fortunately, most leaves will be empty: use a sparse tree
+* Most leaves will be empty, so use a sparse tree: all-empty sub-tree nodes can be cached
 * Quadrable defines E<sub>N</sub> = 32 NUL bytes for all N
 
 </script></section>
@@ -256,7 +256,7 @@
 
 * Collapsed leaves are hashed specially
 * Key is included, so that if same value is "moved around" within a sub-tree, root changes
-* Input to final hash is 65 bytes: can't be reinterpreted as hasing two intermediate nodes (64 bytes)
+* Input to final hash is 65 bytes: cannot be reinterpreted as hashing two intermediate nodes (64 bytes)
 * Pre-hashing key allows fixed-size proofs, even with very large keys
 
 </script></section>
@@ -282,6 +282,7 @@
 <img src="add-branch-empty.svg" style="background-color: white" />
 
 * If two keys share prefixes, there may be multiple branches to traverse
+  * Less efficient, but simplifies representation
 
 </script></section>
 
@@ -425,31 +426,11 @@
 <div class="right small-text"><p data-markdown>
 * After proof processing, we are left with a *partial tree*
 * Not a complete tree because it contains witness nodes (red)
-* We can perform lookups, insertions, modifications, and deletes, as long as we never traverse to a red node
+* We can lookup, insert, modify, and delete, so long as we never encounter a red node
 </p></div>
 
 </section>
 
-
-
-
-<section>
-
-<p data-markdown>
-## Partial Trees
-</p>
-
-<div class="left">
-    <img style="background-color: white;" src="partial-tree1.svg" />
-</div>
-
-<div class="right small-text"><p data-markdown>
-* After proof processing, we are left with a *partial tree*
-* Not a complete tree because it contains witness nodes (red)
-* We can perform lookups, insertions, modifications, and deletes, as long as we never traverse to a red node
-</p></div>
-
-</section>
 
 
 
@@ -464,12 +445,31 @@
 </div>
 
 <div class="right small-text"><p data-markdown>
-* Witness nodes can be "summarising" very large sub-trees
-* This is why proofs can be small, even when the database is very large
+* Witness nodes can "summarise" very large sub-trees
+* This is how proofs can be small, even when the database is very large
 * When new proofs are received, we can replace witnesses with the new nodes, expanding the partial tree
 </p></div>
 
 </section>
+
+
+
+<section>
+
+<p data-markdown>
+## Re-exporting proofs
+</p>
+
+<div class="left">
+    <img style="background-color: white;" src="partial-tree4.svg" />
+</div>
+
+<div class="right small-text"><p data-markdown>
+* If you have a partial tree, you can can re-export proofs for items you have, even without the full tree
+</p></div>
+
+</section>
+
 
 
 
