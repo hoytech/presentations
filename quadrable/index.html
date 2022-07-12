@@ -123,6 +123,11 @@
 
 ## New York Times/Surety
 
+<div style="display: flex; height: 500px">
+    <img src="surety2.jpg" style="border: none; max-height:100%" />
+    <img src="surety1.jpg" style="border: none; max-height:100%" />
+</div>
+
 </script></section>
 
 
@@ -391,6 +396,102 @@
 * FIXME
 
 </script></section>
+
+
+
+<section data-markdown><script type="text/template"> <img src="strand1.svg" style="background-color: white" /> </script></section>
+<section data-markdown><script type="text/template"> <img src="strand2.svg" style="background-color: white" /> </script></section>
+<section data-markdown><script type="text/template"> <img src="strand3.svg" style="background-color: white" /> </script></section>
+<section data-markdown><script type="text/template"> <img src="strand4.svg" style="background-color: white" /> </script></section>
+<section data-markdown><script type="text/template"> <img src="strand5.svg" style="background-color: white" /> </script></section>
+<section data-markdown><script type="text/template"> <img src="strand6.svg" style="background-color: white" /> </script></section>
+<section data-markdown><script type="text/template"> <img src="strand7.svg" style="background-color: white" /> </script></section>
+<section data-markdown><script type="text/template"> <img src="strand8.svg" style="background-color: white" /> </script></section>
+
+
+
+
+
+<section>
+
+<p data-markdown>
+## Partial Trees
+</p>
+
+<div class="left">
+    <img style="background-color: white;" src="partial-tree1.svg" />
+</div>
+
+<div class="right small-text"><p data-markdown>
+* After proof processing, we are left with a *partial tree*
+* Not a complete tree because it contains witness nodes (red)
+* We can perform lookups, insertions, modifications, and deletes, as long as we never traverse to a red node
+</p></div>
+
+</section>
+
+
+
+
+<section>
+
+<p data-markdown>
+## Partial Trees
+</p>
+
+<div class="left">
+    <img style="background-color: white;" src="partial-tree1.svg" />
+</div>
+
+<div class="right small-text"><p data-markdown>
+* After proof processing, we are left with a *partial tree*
+* Not a complete tree because it contains witness nodes (red)
+* We can perform lookups, insertions, modifications, and deletes, as long as we never traverse to a red node
+</p></div>
+
+</section>
+
+
+
+<section>
+
+<p data-markdown>
+## Witness Nodes
+</p>
+
+<div class="left">
+    <img style="background-color: white;" src="partial-tree2.svg" />
+</div>
+
+<div class="right small-text"><p data-markdown>
+* Witness nodes can be "summarising" very large sub-trees
+* This is why proofs can be small, even when the database is very large
+* When new proofs are received, we can replace witnesses with the new nodes, expanding the partial tree
+</p></div>
+
+</section>
+
+
+
+<section>
+
+<p data-markdown>
+## Non-Inclusion
+</p>
+
+<div class="left">
+    <img style="background-color: white;" src="partial-tree3.svg" />
+</div>
+
+<div class="right small-text"><p data-markdown>
+* How do you prove a key is *not* in the tree?
+* Proof creator just needs to make it so negative lookups don't encounter witness nodes
+* Two methods for negative lookups: Either an empty branch or a leaf blocking path to queried key
+</p></div>
+
+</section>
+
+
 
 
 <!--
