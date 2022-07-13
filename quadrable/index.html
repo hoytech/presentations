@@ -64,6 +64,10 @@
       .small-text {
         font-size: 85%;
       }
+
+      .reveal pre {
+        width: unset;
+      }
     </style>
   </head>
 
@@ -388,15 +392,6 @@
 
 
 
-<section data-markdown><script type="text/template">
-
-## Copy On Write
-
-<img src="cow.svg" style="background-color: white" />
-
-* FIXME
-
-</script></section>
 
 
 
@@ -486,10 +481,133 @@
 <div class="right small-text"><p data-markdown>
 * How do you prove a key is *not* in the tree?
 * Proof creator just needs to make it so negative lookups don't encounter witness nodes
-* Two methods for negative lookups: Either an empty branch or a leaf blocking path to queried key
+* Two methods for negative lookups: Either a leaf blocking path to queried key, or empty branch on path
 </p></div>
 
 </section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## quadb command-line tool
+
+* git-like command-line tool for working with quadrable DBs
+
+
+    $ quadb init
+    quadb: init'ing directory: ./quadb-dir/
+
+</script></section>
+
+
+
+
+<section data-markdown style="width: unset"><script type="text/template">
+
+## quadb status
+
+    $ quadb status
+    Head: master
+    Root: 0x0000000000000000000000000000000000000000000000000000000000000000 (0)
+
+* Shows the currently checked out "head"
+  * Like a git branch
+
+</script></section>
+
+
+
+
+<section data-markdown style="width: unset"><script type="text/template">
+
+## put/get
+
+    $ quadb put key val
+    $ quadb get key
+    val
+    $ quadb status
+    Head: master
+    Root: 0x0b84df4f4677733fe0956d3e4853868f54a64d0f86ecfcb3712c18e29bd8249c (1)
+
+</script></section>
+
+
+
+<section data-markdown style="width: unset"><script type="text/template">
+
+## del
+
+    $ quadb del key
+    $ quadb status
+    Head: master
+    Root: 0x0000000000000000000000000000000000000000000000000000000000000000 (0)
+
+
+* After delete, we go back to empty tree (all NUL bytes)
+
+</script></section>
+
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## Copy On Write
+
+<img src="cow.svg" style="background-color: white" />
+
+* Previous diagrams were slightly simplified
+* Nodes are never modified, instead they use COW
+* Very cheap snapshots/checkpoints
+
+</script></section>
+
+
+
+
+<section data-markdown style="width: unset"><script type="text/template">
+
+## Switching heads
+
+    $ quadb head
+    => master : 0x0000000000000000000000000000000000000000000000000000000000000000 (0)
+
+    $ quadb checkout temp
+    $ quadb put tempKey tempVal
+    $ quadb head
+    => temp : 0xf4f60482d2e639d24d6dfae605337968a86c404f5c41286987a916e40af21261 (2427)
+       master : 0x0000000000000000000000000000000000000000000000000000000000000000 (0)
+
+    $ quadb fork temp2
+    $ quadb head
+       temp : 0xf4f60482d2e639d24d6dfae605337968a86c404f5c41286987a916e40af21261 (2427)
+    => temp2 : 0xf4f60482d2e639d24d6dfae605337968a86c404f5c41286987a916e40af21261 (2427)
+       master : 0x0000000000000000000000000000000000000000000000000000000000000000 (0)
+
+</script></section>
+
+
+
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## LMDB
+
+* Quadrable uses LMDB as its backing store
+* Embedded key-value data-base
+* Uses [C++17 lmdbxx bindings](https://github.com/hoytech/lmdbxx)
+
+</script></section>
+
+
+
+
 
 
 
