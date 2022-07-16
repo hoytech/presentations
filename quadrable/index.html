@@ -68,6 +68,9 @@
       .reveal pre {
         width: unset;
       }
+
+      .topic-slide {
+      }
     </style>
   </head>
 
@@ -94,6 +97,25 @@
 
 <section data-markdown><script type="text/template">
 
+## Topics
+
+1. Merkle Trees
+1. Proofs
+1. Implementation
+1. User Interfaces 
+1. `quadrable.h` C++ library
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template"> <h1 class="topic-slide">Merkle Trees</h1> </script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
 ## git
 
 * The latest git commit hash is a digest of the entire contents and history of the repo (all prior commits)
@@ -106,6 +128,18 @@
 </script></section>
 
 
+
+
+<section data-markdown><script type="text/template">
+
+## Roots of Trust
+
+* If we have a commit hash for a repository, we can safely download the repository from anywhere
+  * Even an untrusted source
+* We can re-compute the commit hash from the downloaded repository and make sure it matches
+  * Tamper-resistant
+
+</script></section>
 
 
 
@@ -181,7 +215,7 @@
 * Traditional merkle trees contain a list of elements in arbitrary order
   * The position in the list determines the path through the tree
 * Problem: how to insert/remove elements
-  * Path-independently (order of operations doesn't matter); and
+  * Path-dependent (order of operations does matter); and
   * Efficiently (not re-sorting or shuffling elements)
 
 </script></section>
@@ -317,9 +351,12 @@
 
 
 
+<section data-markdown><script type="text/template"> <h1 class="topic-slide">Proofs</h1> </script></section>
+
+
 <section data-markdown><script type="text/template">
 
-## Proofs
+## Proofs and Witnesses
 
 * The reason we're we doing all this hashing is so that we can prove elements exist (or do not exist) in the DB to somebody who only knows the root hash
 * Requires sending *witnesses*
@@ -489,6 +526,51 @@
 
 
 
+
+<section data-markdown><script type="text/template"> <h1 class="topic-slide">Implementation</h1> </script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Copy On Write
+
+<img src="cow.svg" style="background-color: white" />
+
+* Previous diagrams were slightly simplified
+* Nodes are never modified, instead they use COW
+* Very cheap snapshots/checkpoints
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## LMDB
+
+* Quadrable uses LMDB as its backing store
+* Embedded key-value data-base
+* Uses [C++17 lmdbxx bindings](https://github.com/hoytech/lmdbxx)
+
+</script></section>
+
+
+
+<section data-markdown style="width: unset"><script type="text/template">
+
+## std::string_view
+
+</script></section>
+
+
+
+
+
+<section data-markdown><script type="text/template"> <h1 class="topic-slide">User Interfaces</h1> </script></section>
+
+
 <section data-markdown><script type="text/template">
 
 ## quadb command-line tool
@@ -553,19 +635,6 @@
 
 
 
-<section data-markdown><script type="text/template">
-
-## Copy On Write
-
-<img src="cow.svg" style="background-color: white" />
-
-* Previous diagrams were slightly simplified
-* Nodes are never modified, instead they use COW
-* Very cheap snapshots/checkpoints
-
-</script></section>
-
-
 
 
 <section data-markdown style="width: unset"><script type="text/template">
@@ -595,13 +664,125 @@
 
 
 
+
+
 <section data-markdown><script type="text/template">
 
-## LMDB
+## C++ Usage
 
-* Quadrable uses LMDB as its backing store
-* Embedded key-value data-base
-* Uses [C++17 lmdbxx bindings](https://github.com/hoytech/lmdbxx)
+    lmdb::env lmdb_env = lmdb::env::create();
+    lmdb_env.open("/path/to/quadrable-dir", MDB_CREATE, 0664);
+
+    quadrable::Quadrable db;
+    db.trackKeys = true; // optional
+
+    {
+        auto txn = lmdb::txn::begin(lmdb_env, nullptr, 0);
+        db.init(txn);
+        txn.commit();
+    }
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Updates
+
+Simple:
+
+    db.put(txn, "key1", "val1");
+    db.put(txn, "key2", "val2");
+
+Better:
+
+    db.change()
+      .put("key1", "val1")
+      .put("key2", "val2")
+      .apply(txn);
+
+* Only 1 tree traversal
+* Fewer intermediate nodes created
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Reads
+
+Simple:
+
+    std::string_view key1Val, key2Val;
+    bool key1Exists = db.get(txn, "key1", key1Val);
+    bool key2Exists = db.get(txn, "key2", key2Val);
+    if (key1Exists) std::cout << key1Val;
+
+Better (maybe):
+
+    auto recs = db.get(txn, { "key1", "key2", });
+    if (recs["key1"].exists) std::cout << recs["key1"].val;
+
+* Only 1 tree traversal
+
+</script></section>
+
+
+
+<section data-markdown style="width: unset"><script type="text/template">
+
+## Heads
+
+All command-line operations have corresponding C++ methods:
+
+* `db.getHead()`
+* `db.root()`
+* `db.checkout()`
+* `db.fork()`
+
+</script></section>
+
+
+
+
+<section data-markdown style="width: unset"><script type="text/template">
+
+## Proofs
+
+Export:
+
+    auto proof = db.exportProof(txn, { "key1", "key2", });
+
+    std::string encodedProof = quadrable::proofTransport::encodeProof(proof);
+
+Import:
+
+    auto proof = quadrable::proofTransport::decodeProof(encodedProof);
+
+    db.importProof(txn, proof, trustedRoot);
+
+* If partial tree root doesn't match `trustedRoot` then exception thrown
+
+</script></section>
+
+
+
+
+<section data-markdown style="width: unset"><script type="text/template">
+
+## Lambdas
+
+    std::unordered_set<uint64_t> markedNodes;
+
+    void markTree(lmdb::txn &txn, uint64_t rootNodeId) {
+        db.walkTree(txn, rootNodeId, [&](quadrable::ParsedNode &node, uint64_t){
+            if (markedNodes.find(node.nodeId) != markedNodes.end()) return false;
+            markedNodes.emplace(node.nodeId);
+            return true;
+        });
+    }
 
 </script></section>
 
@@ -622,6 +803,11 @@ partial trees
 git examples
 c++ examples
   * batching
+  * use of lambdas: walkTree
+  * string_view
+  * method chaining
+  * __builtin_clzll
+  * garbage collector
 ui screenshots
 
 -->
