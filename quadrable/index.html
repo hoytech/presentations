@@ -97,6 +97,20 @@
 
 <section data-markdown><script type="text/template">
 
+## Authenticated Database
+
+* Quadrable is an authenticated database
+  * Operations can be performed by an untrusted prover, and verifier can ensure they were done properly
+  * Flexible and decentralised, like `git`
+  * Header-only C++17 library
+  * Command-line tool
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
 ## Topics
 
 1. Merkle Trees
@@ -116,7 +130,42 @@
 
 <section data-markdown><script type="text/template">
 
-## git
+## Merkle Trees
+
+* A foundational data-structure of cryptography distributed systems
+* Used for various reasons in git, BitTorrent, ZFS, Apache Cassandra, Dynamo DB, all cryptocurrencies, Certificate Transparency, post-quantum cryptosystems, and much more
+
+</script></section>
+
+
+
+
+
+<section>
+
+<p data-markdown>
+### Example: Certificate Transparency
+</p>
+
+<div class="left">
+    <img width="100%" src="certtrans.png" style="float: left; border:0px; background-color: white" />
+</div>
+
+<div class="right small-text"><p data-markdown>
+* Google project to keep SSL Certificate Authorities honest by recording *all* issued certs in a giant DB
+* But how can a browser check a certificate is present without downloading the full DB?
+</p></div>
+
+</section>
+
+
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## Example: git
 
 * The latest git commit hash is a digest of the entire contents and history of the repo (all prior commits)
   * Works because each commit contains the previous commit's hash: "*Hash chain*"
@@ -147,12 +196,12 @@
 
 ## Out-of-band transmission
 
-* commit hashes can be transmitted *out-of-band*
+* How to *get* a root of trust?
+* Hashes can be GPG signed (with public keys transmitted out-of-band)
+* Transfer hashes themselves out-of-band
   * Direct email/IM/etc
-  * Signatures (with public keys transmitted out-of-band)
   * Broadcast (radio/satellite/twitter)
   * Newspapers (see next slide)
-
 </script></section>
 
 
@@ -173,7 +222,7 @@
 
 <section data-markdown><script type="text/template">
 
-## Disadvantage of Hash Chains
+## Hash Chains
 
 <img src="git.svg" style="background-color: white" />
 
@@ -229,7 +278,8 @@
 <img src="path.svg" style="background-color: white" />
 
 * In Quadrable, each element has a *key*
-* The hash of the key determines the path through the tree, unused tree leaves are special "empty" values
+* Hash of the key determines path through the tree
+* Unused tree leaves are special "empty" values
 
 </script></section>
 
@@ -294,7 +344,7 @@
 
 * Collapsed leaves are hashed specially
 * Key is included, so that if same value is "moved around" within a sub-tree, root changes
-* Input to final hash is 65 bytes: cannot be reinterpreted as hashing two intermediate nodes (64 bytes)
+* Input to outer hash is 65 bytes: cannot be reinterpreted as hashing two intermediate nodes (64 bytes)
 * Pre-hashing key allows fixed-size proofs, even with very large keys
 
 </script></section>
@@ -429,6 +479,17 @@
 
 
 
+<section data-markdown><script type="text/template">
+
+## Proof Encoding
+
+* Quadrable uses a special "command-based" proof encoding
+  * A mini program that is used to reconstruct the tree
+* Starts with multiple "strands" and extends them and merges them with other strands until only one is left
+
+</script></section>
+
+
 
 
 
@@ -457,8 +518,8 @@
 
 <div class="right small-text"><p data-markdown>
 * After proof processing, we are left with a *partial tree*
-* Not a complete tree because it contains witness nodes (red)
-* We can lookup, insert, modify, and delete, so long as we never encounter a red node
+* Not a complete tree because it contains witness nodes (blue)
+* We can lookup, insert, modify, and delete, so long as we never encounter a witness
 </p></div>
 
 </section>
@@ -531,38 +592,108 @@
 
 
 
-<section data-markdown><script type="text/template">
-
-## Copy On Write
-
-<img src="cow.svg" style="background-color: white" />
-
-* Previous diagrams were slightly simplified
-* Nodes are never modified, instead they use COW
-* Very cheap snapshots/checkpoints
-
-</script></section>
-
-
-
 
 <section data-markdown><script type="text/template">
 
 ## LMDB
 
 * Quadrable uses LMDB as its backing store
+  * [C++17 lmdbxx bindings](https://github.com/hoytech/lmdbxx)
 * Embedded key-value data-base
-* Uses [C++17 lmdbxx bindings](https://github.com/hoytech/lmdbxx)
+* Single-level store
+  * No user-space buffering: only page cache via `mmap()`
+* ACID transactions
+* MVCC: writers don't block readers, and readers block nobody
 
 </script></section>
 
 
 
-<section data-markdown style="width: unset"><script type="text/template">
+<section data-markdown><script type="text/template">
 
-## std::string_view
+## C++ Usage
+
+    lmdb::env lmdb_env = lmdb::env::create();
+    lmdb_env.open("/path/to/quadrable-dir", MDB_CREATE, 0664);
+
+    quadrable::Quadrable db;
+
+    {
+        auto txn = lmdb::txn::begin(lmdb_env, nullptr, 0);
+        db.init(txn);
+        txn.commit();
+    }
 
 </script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Updates
+
+Simple:
+
+    db.put(txn, "key1", "val1");
+    db.put(txn, "key2", "val2");
+
+Better:
+
+    db.change()
+      .put("key1", "val1")
+      .put("key2", "val2")
+      .apply(txn);
+
+* Only 1 tree traversal
+* Fewer intermediate nodes created
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Read
+
+    std::string_view val;
+    bool exists = db.get(txn, "key1", val);
+
+* Be very careful with `val`:
+  * It points into the DB's `mmap()`ed file!
+  * It can no longer be used after a write operation, or transaction completed
+* But, no copying and no memory allocation
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Read Batching
+
+Simple:
+
+    std::string_view key1Val, key2Val;
+    bool key1Exists = db.get(txn, "key1", key1Val);
+    bool key2Exists = db.get(txn, "key2", key2Val);
+    if (key1Exists) std::cout << key1Val;
+
+Better (maybe):
+
+    auto recs = db.get(txn, { "key1", "key2", });
+    if (recs["key1"].exists) std::cout << recs["key1"].val;
+
+* Only 1 tree traversal
+
+</script></section>
+
+
+
+
+
+
+
+
 
 
 
@@ -662,72 +793,24 @@
 
 
 
-
-
-
-
 <section data-markdown><script type="text/template">
 
-## C++ Usage
+## Copy On Write
 
-    lmdb::env lmdb_env = lmdb::env::create();
-    lmdb_env.open("/path/to/quadrable-dir", MDB_CREATE, 0664);
+<img src="cow.svg" style="background-color: white" />
 
-    quadrable::Quadrable db;
-    db.trackKeys = true; // optional
-
-    {
-        auto txn = lmdb::txn::begin(lmdb_env, nullptr, 0);
-        db.init(txn);
-        txn.commit();
-    }
+* Previous diagrams were slightly simplified
+* Nodes are never modified, instead they use COW
+* Very cheap snapshots/checkpoints
+  * `fork` is instantaneous, even on gigantic DB
 
 </script></section>
 
 
 
-<section data-markdown><script type="text/template">
-
-## Updates
-
-Simple:
-
-    db.put(txn, "key1", "val1");
-    db.put(txn, "key2", "val2");
-
-Better:
-
-    db.change()
-      .put("key1", "val1")
-      .put("key2", "val2")
-      .apply(txn);
-
-* Only 1 tree traversal
-* Fewer intermediate nodes created
-
-</script></section>
 
 
 
-<section data-markdown><script type="text/template">
-
-## Reads
-
-Simple:
-
-    std::string_view key1Val, key2Val;
-    bool key1Exists = db.get(txn, "key1", key1Val);
-    bool key2Exists = db.get(txn, "key2", key2Val);
-    if (key1Exists) std::cout << key1Val;
-
-Better (maybe):
-
-    auto recs = db.get(txn, { "key1", "key2", });
-    if (recs["key1"].exists) std::cout << recs["key1"].val;
-
-* Only 1 tree traversal
-
-</script></section>
 
 
 
@@ -767,6 +850,14 @@ Import:
 
 </script></section>
 
+
+
+
+<section data-markdown style="width: unset"><script type="text/template">
+
+## Garbage Collection
+
+</script></section>
 
 
 

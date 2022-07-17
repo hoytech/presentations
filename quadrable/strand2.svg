@@ -41,8 +41,8 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="2.8"
-     inkscape:cx="405.47749"
+     inkscape:zoom="0.98994949"
+     inkscape:cx="337.2632"
      inkscape:cy="187.86921"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
@@ -144,7 +144,7 @@
          y="136.65851"
          style="stroke-width:0.22888844">Command: Hash with EMPTY</tspan></text>
     <path
-       style="fill:#008000;fill-opacity:1;stroke:#008000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
+       style="fill:#ff0000;fill-opacity:1;stroke:#ff0000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
        id="path4920"
        sodipodi:type="arc"
        sodipodi:cx="159.61966"
@@ -155,7 +155,7 @@
        sodipodi:end="0.90224447"
        d="m 161.21752,115.68888 a 2.6726952,2.6726952 0 0 1 -3.72919,-0.52978 2.6726952,2.6726952 0 0 1 0.50391,-3.73277 2.6726952,2.6726952 0 0 1 3.73617,0.478 2.6726952,2.6726952 0 0 1 -0.45208,3.7394 l -1.65667,-2.09731 z" />
     <path
-       style="fill:#008000;fill-opacity:1;stroke:#008000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
+       style="fill:#ff0000;fill-opacity:1;stroke:#ff0000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
        id="path4920-4"
        sodipodi:type="arc"
        sodipodi:cx="144.92526"
@@ -166,7 +166,7 @@
        sodipodi:end="0.90224447"
        d="m 146.52313,91.688319 a 2.6726952,2.6726952 0 0 1 -3.72919,-0.529776 2.6726952,2.6726952 0 0 1 0.5039,-3.732775 2.6726952,2.6726952 0 0 1 3.73618,0.478005 2.6726952,2.6726952 0 0 1 -0.45209,3.739405 l -1.65667,-2.097318 z" />
     <path
-       style="fill:#008000;fill-opacity:1;stroke:#008000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
+       style="fill:#ff0000;fill-opacity:1;stroke:#ff0000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
        id="path4920-7"
        sodipodi:type="arc"
        sodipodi:cx="129.6909"
@@ -177,7 +177,7 @@
        sodipodi:end="0.90224447"
        d="m 131.28877,105.82675 a 2.6726952,2.6726952 0 0 1 -3.72919,-0.52978 2.6726952,2.6726952 0 0 1 0.5039,-3.73277 2.6726952,2.6726952 0 0 1 3.73618,0.478 2.6726952,2.6726952 0 0 1 -0.45209,3.73941 l -1.65667,-2.09732 z" />
     <path
-       style="fill:#ff0000;fill-opacity:1;stroke:#ff0000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
+       style="fill:#0000ff;fill-opacity:1;stroke:#0000ff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
        id="path4920-75"
        sodipodi:type="arc"
        sodipodi:cx="151.60159"
@@ -198,7 +198,7 @@
        id="path5075-4"
        inkscape:connector-curvature="0" />
     <path
-       style="fill:#0000ff;fill-opacity:1;stroke:#0000ff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
+       style="fill:#ffd42a;fill-opacity:1;stroke:#ffd42a;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
        id="path4920-75-8"
        sodipodi:type="arc"
        sodipodi:cx="155.66412"

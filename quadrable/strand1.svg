@@ -42,8 +42,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.98994949"
-     inkscape:cx="4.6739733"
-     inkscape:cy="260.99969"
+     inkscape:cx="197.61311"
+     inkscape:cy="258.97938"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -144,7 +144,7 @@
          y="136.65851"
          style="stroke-width:0.22888844">Command: Hash with 0x38f1...</tspan></text>
     <path
-       style="fill:#008000;fill-opacity:1;stroke:#008000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
+       style="fill:#ff0000;fill-opacity:1;stroke:#ff0000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
        id="path4920"
        sodipodi:type="arc"
        sodipodi:cx="162.82687"
@@ -155,7 +155,7 @@
        sodipodi:end="0.90224447"
        d="m 164.42474,107.60099 a 2.6726952,2.6726952 0 0 1 -3.72919,-0.52978 2.6726952,2.6726952 0 0 1 0.5039,-3.73278 2.6726952,2.6726952 0 0 1 3.73618,0.47801 2.6726952,2.6726952 0 0 1 -0.45209,3.7394 l -1.65667,-2.09731 z" />
     <path
-       style="fill:#008000;fill-opacity:1;stroke:#008000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
+       style="fill:#ff0000;fill-opacity:1;stroke:#ff0000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
        id="path4920-4"
        sodipodi:type="arc"
        sodipodi:cx="148.66164"
@@ -166,7 +166,7 @@
        sodipodi:end="0.90224447"
        d="m 150.2595,87.833758 a 2.6726952,2.6726952 0 0 1 -3.72919,-0.529775 2.6726952,2.6726952 0 0 1 0.5039,-3.732776 2.6726952,2.6726952 0 0 1 3.73618,0.478006 2.6726952,2.6726952 0 0 1 -0.45208,3.739404 l -1.65667,-2.097318 z" />
     <path
-       style="fill:#008000;fill-opacity:1;stroke:#008000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
+       style="fill:#ff0000;fill-opacity:1;stroke:#ff0000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
        id="path4920-7"
        sodipodi:type="arc"
        sodipodi:cx="133.42728"
