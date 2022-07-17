@@ -115,9 +115,7 @@
 
 1. Merkle Trees
 1. Proofs
-1. Implementation
-1. User Interfaces 
-1. `quadrable.h` C++ library
+1. Usage
 
 </script></section>
 
@@ -153,7 +151,7 @@
 
 <div class="right small-text"><p data-markdown>
 * Google project to keep SSL Certificate Authorities honest by recording *all* issued certs in a giant DB
-* But how can a browser check a certificate is present without downloading the full DB?
+* But how can a (potentially untrusted) server convince a browser that a certificate is present without the browser having the full DB?
 </p></div>
 
 </section>
@@ -588,7 +586,7 @@
 
 
 
-<section data-markdown><script type="text/template"> <h1 class="topic-slide">Implementation</h1> </script></section>
+<section data-markdown><script type="text/template"> <h1 class="topic-slide">Usage</h1> </script></section>
 
 
 
@@ -611,7 +609,7 @@
 
 <section data-markdown><script type="text/template">
 
-## C++ Usage
+## C++ Setup
 
     lmdb::env lmdb_env = lmdb::env::create();
     lmdb_env.open("/path/to/quadrable-dir", MDB_CREATE, 0664);
@@ -698,8 +696,6 @@ Better (maybe):
 
 
 
-
-<section data-markdown><script type="text/template"> <h1 class="topic-slide">User Interfaces</h1> </script></section>
 
 
 <section data-markdown><script type="text/template">
@@ -793,27 +789,6 @@ Better (maybe):
 
 
 
-<section data-markdown><script type="text/template">
-
-## Copy On Write
-
-<img src="cow.svg" style="background-color: white" />
-
-* Previous diagrams were slightly simplified
-* Nodes are never modified, instead they use COW
-* Very cheap snapshots/checkpoints
-  * `fork` is instantaneous, even on gigantic DB
-
-</script></section>
-
-
-
-
-
-
-
-
-
 <section data-markdown style="width: unset"><script type="text/template">
 
 ## Heads
@@ -840,13 +815,32 @@ Export:
 
     std::string encodedProof = quadrable::proofTransport::encodeProof(proof);
 
-Import:
+Import (on another computer):
 
     auto proof = quadrable::proofTransport::decodeProof(encodedProof);
 
     db.importProof(txn, proof, trustedRoot);
 
 * If partial tree root doesn't match `trustedRoot` then exception thrown
+* If it succeeds, you now have a partial DB available
+
+</script></section>
+
+
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## Copy On Write
+
+<img src="cow.svg" style="background-color: white" />
+
+* Previous diagrams were slightly simplified
+* Nodes are never modified, instead they use CoW
+* Very cheap snapshots/checkpoints
+  * `fork` is instantaneous, even on gigantic DB
 
 </script></section>
 
@@ -857,13 +851,17 @@ Import:
 
 ## Garbage Collection
 
+* Updates/deletions/etc never actually remove nodes, they just create new nodes that may or may not point to the old ones (CoW)
+* `quadb gc` command uses mark-sweep garbage collector to delete unreachable nodes
+* Mark phase can be done in a read-only transaction (no impact on other users)
+
 </script></section>
 
 
 
 <section data-markdown style="width: unset"><script type="text/template">
 
-## Lambdas
+## walkTree
 
     std::unordered_set<uint64_t> markedNodes;
 
@@ -874,6 +872,9 @@ Import:
             return true;
         });
     }
+
+* Generic tree-walking function for processing trees
+* Used for garbage collection, diffing trees, collecting DB stats, and more
 
 </script></section>
 
