@@ -101,7 +101,8 @@
 
 * Quadrable is an authenticated database
   * Operations can be performed by an untrusted prover, and verifier can ensure they were done properly
-  * Flexible and decentralised, like `git`
+  * Flexible and decentralised
+    * `git`-inspired
   * Header-only C++17 library
   * Command-line tool
 
@@ -130,7 +131,7 @@
 
 ## Merkle Trees
 
-* A foundational data-structure of cryptography distributed systems
+* A foundational data-structure of cryptography and distributed systems
 * Used for various reasons in git, BitTorrent, ZFS, Apache Cassandra, Dynamo DB, all cryptocurrencies, Certificate Transparency, post-quantum cryptosystems, and much more
 
 </script></section>
@@ -151,7 +152,7 @@
 
 <div class="right small-text"><p data-markdown>
 * Google project to keep SSL Certificate Authorities honest by recording *all* issued certs in a giant DB
-* But how can a (potentially untrusted) server convince a browser that a certificate is present without the browser having the full DB?
+* But how can a (potentially untrusted) server convince a browser that a certificate was recorded without the browser having the full DB?
 </p></div>
 
 </section>
@@ -249,7 +250,8 @@
 <img src="exponential.svg" style="background-color: white" />
 
 * Why use trees?
-  * Total amount of items that can be in DB grows exponentially with number of witnesses (tree depth)
+  * Total amount of items that can be in DB grows exponentially with tree depth
+  * Number of witnesses corresponds to tree depth
 
 </script></section>
 
@@ -257,7 +259,7 @@
 
 <section data-markdown><script type="text/template">
 
-## Merkle-Tree Limitation
+## Limitation
 
 * Traditional merkle trees contain a list of elements in arbitrary order
   * The position in the list determines the path through the tree
@@ -286,7 +288,7 @@
 
 <section data-markdown><script type="text/template">
 
-## Problem: Trees too big
+## Problem: Trees get too big
 
 * The problem with using hashes of keys as paths is that the trees get too big
 * Typical hash function output is 32 bytes (256 bits)
@@ -326,8 +328,8 @@
 
 <img src="collapsed-leaves.svg" style="background-color: white; width: 600px" />
 
-* In Quadrable, any sub-tree with exactly one item in it is collapsed to a leaf
-* Special branch nodes for traversal
+* In Quadrable, any sub-tree with exactly one item under it is collapsed to a leaf
+* Branch nodes continue to exist for traversal
 
 </script></section>
 
@@ -336,7 +338,7 @@
 
 <section data-markdown><script type="text/template">
 
-## Leaf hashing
+## Quadrable Leaf hashing
 
     leafNodeHash = H(H(key) || H(value) || '\0')
 
@@ -391,6 +393,7 @@
 
 ## Path-independent
 
+* Important property provided by Quadrable
 * Order of insertions/deletions to build the tree doesn't matter
 * Identical trees have identical roots
 
@@ -408,7 +411,7 @@
 
 * The reason we're we doing all this hashing is so that we can prove elements exist (or do not exist) in the DB to somebody who only knows the root hash
 * Requires sending *witnesses*
-  * Tree nodes the proof verifier doesn't care about, but are needed to validate the proof
+  *  These are tree nodes that the proof verifier doesn't care about, but are needed to validate the proof
 
 </script></section>
 
@@ -600,10 +603,26 @@
 * Embedded key-value data-base
 * Single-level store
   * No user-space buffering: only page cache via `mmap()`
-* ACID transactions
-* MVCC: writers don't block readers, and readers block nobody
 
 </script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## LMDB
+
+* ACID transactions
+* Very little tuning or maintenance
+* No locks on read path (MVCC)
+  * Reads scale optimally with multiple processes/threads
+* No crash recovery needed
+  * No write-ahead log (or write amplification)
+  * Instant start-up (even post-crash)
+
+</script></section>
+
 
 
 
@@ -617,7 +636,7 @@
     quadrable::Quadrable db;
 
     {
-        auto txn = lmdb::txn::begin(lmdb_env, nullptr, 0);
+        auto txn = lmdb::txn::begin(lmdb_env);
         db.init(txn);
         txn.commit();
     }
@@ -651,15 +670,15 @@ Better:
 
 <section data-markdown><script type="text/template">
 
-## Read
+## Read and string_view
 
     std::string_view val;
     bool exists = db.get(txn, "key1", val);
 
-* Be very careful with `val`:
+* No copying, no memory allocation
+* But, be **very careful** with `val`:
   * It points into the DB's `mmap()`ed file!
-  * It can no longer be used after a write operation, or transaction completed
-* But, no copying and no memory allocation
+  * It can no longer be used after a write operation, or after transaction finished
 
 </script></section>
 
@@ -761,10 +780,23 @@ Better (maybe):
 
 
 
+<section data-markdown><script type="text/template">
+
+## Copy On Write
+
+<img src="cow.svg" style="background-color: white" />
+
+* Previous diagrams were slightly simplified
+* Nodes are never modified, instead they use CoW
+* Very cheap snapshots/checkpoints
+  * `fork` is instantaneous, even on gigantic DB
+
+</script></section>
 
 
 
-<section data-markdown style="width: unset"><script type="text/template">
+
+<section data-markdown class="small-text" style="width: unset"><script type="text/template">
 
 ## Switching heads
 
@@ -831,18 +863,6 @@ Import (on another computer):
 
 
 
-<section data-markdown><script type="text/template">
-
-## Copy On Write
-
-<img src="cow.svg" style="background-color: white" />
-
-* Previous diagrams were slightly simplified
-* Nodes are never modified, instead they use CoW
-* Very cheap snapshots/checkpoints
-  * `fork` is instantaneous, even on gigantic DB
-
-</script></section>
 
 
 
