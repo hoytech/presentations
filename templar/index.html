@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+
+    <title>Templar</title>
+
+    <meta name="author" content="Doug Hoyte">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <link rel="stylesheet" href="../reveal.js/css/reveal.css">
+    <link rel="stylesheet" href="../reveal.js/css/theme/black.css" id="theme">
+
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="../reveal.js/lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+      var link = document.createElement( 'link' );
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = window.location.search.match( /print-pdf/gi ) ? '../reveal.js/css/print/pdf.css' : '../reveal.js/css/print/paper.css';
+      document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="../reveal.js/lib/js/html5shiv.js"></script>
+    <![endif]-->
+
+    <style>
+      .reveal .slides h1, .reveal .slides h2, .reveal .slides h3 {
+        text-transform: none;
+      }
+
+      .container {
+        display: flex;
+      }
+
+      .container > div {
+        flex: 1;
+      }
+
+      .left {
+        left:-8.33%;
+        text-align: left;
+        float: left;
+        width:50%;
+        z-index:-10;
+      }
+
+      .right {
+        left:31.25%;
+        top: 75px;
+        text-align: left;
+        float: right;
+        z-index:-10;
+        width:50%;
+      }
+
+      .small-text {
+        font-size: 85%;
+      }
+
+      .reveal pre {
+        width: unset;
+      }
+
+      .topic-slide {
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="reveal">
+      <div class="slides">
+
+<!------------------------------------------------------->
+
+
+
+<section data-markdown><script type="text/template">
+
+## Templar
+
+<div style="font-size: 130%"><i>Let's Write A Web App in C++</i></div>
+
+<div style="font-size: 130%; margin-top: 20px;">Or, <i>Parsing HTML With Regular Expressions: Best Practices</i></div>
+
+<div style="font-size: 130%; margin-top: 30px">Doug Hoyte</div>
+
+</script></section>
+
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## Ugly
+
+    [% IF items.size() %]
+        <ul>
+            [% FOREACH item IN items %]
+                <li>[% item %]</li>
+            [% END %]
+        </ul>
+    [% END %]
+
+* So many distracting template directives
+* So much extra indentation
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Pretty
+
+    <ul> ?(items.size())
+        <li>$(item)</li> @(auto &item : items)
+    </ul>
+
+* Template basically looks like the output HTML
+* I stole this syntax from the [hypertextcpp](https://github.com/kamchatka-volcano/hypertextcpp) project
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Rewrite It In Perl (RIIP)
+
+* I love the hypertextcpp template syntax (great idea), but am not crazy about the implementation
+* So I rewrote it
+* ...in perl
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## This template...
+
+    <div class="comments">
+        <h2>
+            Comments by $(ctx.username):
+        </h2>
+
+        <div> @(auto &c : ctx.comments)
+            $(c)
+        </div>
+    </div>
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## ... compiles to this C++
+
+    template<typename TCtx>
+    inline TemplarResult comments([[maybe_unused]]const TCtx &ctx) {
+        std::string out;
+        ::appendRaw(out, "<div class=\"comments\"> <h2> Comments by ");
+        ::appendEscape(out, (ctx.username), false);
+        ::appendRaw(out, ": </h2> ");
+        for (auto &c : ctx.comments) {
+            ::appendRaw(out, "<div> ");
+            ::appendEscape(out, (c), false);
+            ::appendRaw(out, " </div>");
+        }
+        ::appendRaw(out, " </div> ");
+        return TemplarResult{ std::move(out) };
+    }
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Features
+
+* Automatic HTML escaping to protect against XSS security bugs
+* Whitespace minification
+* React/JSX `<></>` fragments for grouping
+* Templates can call other templates
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Regexp::Grammars
+
+    {
+        use Regexp::Grammars;
+
+        $htmlParser = qr{
+            ^ <before=text> <[tag]>* %% <[sep=text]> $
+
+            ## ...
+        }xs;
+    }
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Recursive matching
+
+    <token: tag>
+        \< \s*+ <oTagName=tagName> \s*+ <attrList> /?+ \s*+ \>
+            <beforeInner=text> <[tag]>* %% <[sep=text]>
+        (?: \< \s*+ / \s*+ (?:(?i)<cTagName=\_oTagName>) \s*+ \>
+         | <error: (?{ "No closing tag for <$MATCH{oTagName}>" })> )
+
+    <token: tagName>
+        [\w-]++
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Thank You!
+
+[github.com/hoytech/templar](https://github.com/hoytech/templar)
+
+[hoytech.github.io/presentations/templar](https://hoytech.github.io/presentations/templar)
+
+</script></section>
+
+
+
+
+<!------------------------------------------------------->
+
+
+      </div>
+
+    </div>
+
+    <script src="../reveal.js/lib/js/head.min.js"></script>
+    <script src="../reveal.js/js/reveal.js"></script>
+
+    <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        transition: 'none', // none/fade/slide/convex/concave/zoom
+
+	math: {
+          mathjax: '../lib/MathJax/MathJax.js',
+          config: 'TeX-AMS_SVG-full',
+	},
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: '../reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: '../reveal.js/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: '../reveal.js/plugin/math/math.js', async: true },
+        ]
+      });
+
+    </script>
+
+  </body>
+</html>
