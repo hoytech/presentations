@@ -84,7 +84,7 @@
 
 <section data-markdown><script type="text/template">
 
-## Templar
+## templar.pl
 
 <div style="font-size: 130%"><i>Let's Write A Web App in C++</i></div>
 
@@ -137,10 +137,25 @@
 ## Rewrite It In Perl (RIIP)
 
 * I love the hypertextcpp template syntax (great idea), but am not crazy about the implementation
-* So I rewrote it
-* ...in perl
+* So I rewrote it.
+* In Perl.
 
 </script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Features
+
+* Templates compile to C++ code
+* Automatic HTML escaping to protect against XSS security bugs
+* Whitespace minification
+* React/JSX-style `<></>` fragments for grouping
+* Templates can call other templates
+
+</script></section>
+
 
 
 <section data-markdown><script type="text/template">
@@ -185,15 +200,11 @@
 
 <section data-markdown><script type="text/template">
 
-## Features
+## Implementation
 
-* Automatic HTML escaping to protect against XSS security bugs
-* Whitespace minification
-* React/JSX `<></>` fragments for grouping
-* Templates can call other templates
+As we all know, the best way to parse an HTML document is with a big regular expression
 
 </script></section>
-
 
 
 <section data-markdown><script type="text/template">
