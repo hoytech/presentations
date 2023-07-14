@@ -242,8 +242,92 @@ Becomes:
 
     SELECT * FROM Events WHERE
       pubkey = ? AND (kind = ? OR kind = ?) AND created_at >= ?
+      ORDER BY created_at DESC
 
 </script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## Pros/Cons of SQL DBs
+
+* Good:
+  * Flexible: easy to iterate on different queries
+  * Well-tuned query planners available by default
+* Bad:
+  * Lots of overhead (create SQL string, send to DB, parse SQL, create query plan)
+  * Limited control over execution
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## LMDB
+
+* Instead of a SQL DB, strfry uses LMDB
+* Embedded key-value database
+* A small C library
+* "Single-level store"
+  * Uses the filesystem cache as its only memory cache
+  * Works by `mmap()`ing a file
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## LMDB benefits
+
+* ACID transactions
+* Doesn't need tuning or maintenance
+* No locks in read path (MVCC)
+  * Scales optimally with multiple processes/threads
+* Instant crash recovery
+  * No write-ahead log (less write amplification)
+  * Instant start-up (even post-crash)
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## read() JSON file
+
+<img src="arch-read2.svg" style="background-color: white;" />
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## mmap() JSON file
+
+<img src="arch-mmap.svg" style="background-color: white;" />
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## mmap() structured data
+
+<img src="arch-lmdb.svg" style="background-color: white;" />
+
+</script></section>
+
+
+
+
+
+
+
+
 
 
 
