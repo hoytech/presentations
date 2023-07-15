@@ -477,6 +477,33 @@ Becomes:
 
 
 
+<section data-markdown><script type="text/template">
+
+## Problem
+
+* Clients often post to multiple relays and relays stream events up/down
+* Often relay DBs have many common events
+* How do you efficiently figure out which events one relay has the other doesn't, and vice versa?
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Set Reconcilliation
+
+* You could send the full set of events, or just their IDs
+  * Consumes too much bandwidth
+
+</script></section>
+
+
+
+
+
+
+
 
 
 
