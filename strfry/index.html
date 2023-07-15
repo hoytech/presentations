@@ -207,11 +207,11 @@ In this talk I'll discuss the strfry architecture and implementation, as well as
 
 <section data-markdown><script type="text/template">
 
-## That's it (pretty much).
+## That's it. (pretty much)
 
 * You now know the full nostr protocol
 * NIPs: Nostr Implementation Possibilities
-  * Optional extensions, or suggestions on how to use nostr
+  * Optional extensions and suggestions on how to use nostr
 
 </script></section>
 
@@ -268,7 +268,6 @@ Becomes:
 
 * Instead of a SQL DB, strfry uses LMDB
 * Embedded key-value database
-* A small C library
 * "Single-level store"
   * Uses the filesystem cache as its only memory cache
   * Works by `mmap()`ing a file
@@ -293,6 +292,46 @@ Becomes:
 </script></section>
 
 
+
+
+
+<section data-markdown><script type="text/template">
+
+## MVCC
+
+* Multi-Version Concurrency Control
+* Read operations never need locking in LMDB
+* Each transaction has a consistent view of the DB
+  * Snapshot taken at transaction creation time
+  * Different transactions can have different snapshots
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template"> <img src="mvcc1.svg" style="background-color: white; width: 600px;" /> </script></section>
+<section data-markdown><script type="text/template"> <img src="mvcc2.svg" style="background-color: white; width: 600px;" /> </script></section>
+<section data-markdown><script type="text/template"> <img src="mvcc3.svg" style="background-color: white; width: 600px;" /> </script></section>
+<section data-markdown><script type="text/template"> <img src="mvcc4.svg" style="background-color: white; width: 600px;" /> </script></section>
+<section data-markdown><script type="text/template"> <img src="mvcc5.svg" style="background-color: white; width: 600px;" /> </script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Record serialisation
+
+* How should records be serialised in the DB?
+* If something like JSON is used, must decode the JSON each time a record is accessed
+  * Even if we only want one field
+* Better option: flatbuffers
+  * Single fields can be rapidly extracted, without decoding whole record
+  * Zero-copy
+
+</script></section>
+
+
 <section data-markdown><script type="text/template">
 
 ## read() JSON file
@@ -300,7 +339,6 @@ Becomes:
 <img src="arch-read2.svg" style="background-color: white;" />
 
 </script></section>
-
 
 
 <section data-markdown><script type="text/template">
@@ -312,16 +350,130 @@ Becomes:
 </script></section>
 
 
-
 <section data-markdown><script type="text/template">
 
-## mmap() structured data
+## mmap() flatbuffers
 
 <img src="arch-lmdb.svg" style="background-color: white;" />
 
 </script></section>
 
 
+
+
+
+<section data-markdown><script type="text/template">
+
+## strfry threads
+
+* "Shared-nothing" message-passing model
+  * Threads primarily communicate via one-directional queues
+  * Also indirectly communicate via the DB
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+<img src="strfry-threads.svg" style="background-color: white;" />
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## Websocket
+
+* Accepts websocket connections
+* Routes requests to Ingesters
+* Sends replies back to connections
+* Multiplexes many connections with epoll
+* Only 1 websocket thread
+  * Except with `REUSE_PORT`, discussed soon
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## Ingester
+
+* Does as much CPU-intensive work as possible
+  * Decodes request JSON
+  * Validates and hashes incoming events
+  * Verifies event signatures
+  * Pre-compiles `REQ` filters
+* Routes message to next thread in pipeline
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## Writer
+
+* Performs operations that modify the DB
+* Only 1 writer thread
+* If multiple operations are queued up it executes them all in one transaction
+  * Rolls back failed individual operations using sub-transactions
+  * Transaction commit overhead is amortised, natural counterbalance when under load
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## ReqWorker
+
+* Retrieves stored events that match a `REQ`'s filter, and sends them back to client
+* Can multiplex many concurrently running requests
+* Will pause long-running DB queries to service new queries when they come in
+* After sending all events, sends an `EOSE` and transfers the request to `ReqMonitor`
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## ReqMonitor
+
+* Maintains a set of live `REQ` subscriptions
+  * Inverts the filters, so it has a list of all requests interested in a particular pubkey, for example
+* Monitors DB for new events (using `inotify()`)
+  * Events can be added in many ways, not just via the Writer thread
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## Stream
+
+* Connects to a remote relay, issues a `REQ` and saves the events into the local DB:
+      strfry stream wss://some.relay.com --dir down
+* Can also sent events saved into the local DB *to* the remote relay
+  * Possible directions are `up`, `down`, or `both`
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Write Policy plugins
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+<img src="negentropy.svg" style="border: none; background-color: white; padding: 50px" />
+
+</script></section>
 
 
 
