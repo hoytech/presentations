@@ -450,8 +450,8 @@ Becomes:
 * strfry implements its own indexing, query planning, and execution
 * Increased complexity, but comes with advantages:
   * nostr has fairly basic queries, so a lot of SQL overhead not needed
-  * Queries can be paused and resumed later
-    * Useful for DoS protection, and fairness: long running queries can be deprioritised
+  * Read-only queries can be paused and resumed later
+    * DoS protection, fairness: long running queries can be deprioritised
 
 </script></section>
 
@@ -599,7 +599,7 @@ Becomes:
 
 * Connects to a remote relay, issues a `REQ` and saves the events into the local DB:
       strfry stream wss://some.relay.com --dir down
-* Can also sent events saved into the local DB *to* the remote relay
+* Can also send events saved into the local DB *to* the remote relay
   * Possible directions are `up`, `down`, or `both`
 
 </script></section>
