@@ -495,12 +495,89 @@ Becomes:
 
 * You could send the full set of events, or just their IDs
   * Consumes too much bandwidth
+* strfry uses range-based reconcilliation
+  * Two sides alternate sending the XOR of the IDs within a particular range
+
+</script></section>
+
+
+<section data-markdown><script type="text/template"><h2>Round-trip 1a</h2> <img src="negentropy-flow1.svg" style="background-color: white; width: 600px;" /> </script></section>
+<section data-markdown><script type="text/template"><h2>Round-trip 1b</h2> <img src="negentropy-flow2.svg" style="background-color: white; width: 600px;" /> </script></section>
+<section data-markdown><script type="text/template"><h2>Round-trip 2a</h2> <img src="negentropy-flow3.svg" style="background-color: white; width: 600px;" /> </script></section>
+<section data-markdown><script type="text/template"><h2>Round-trip 2b</h2> <img src="negentropy-flow4.svg" style="background-color: white; width: 600px;" /> </script></section>
+<section data-markdown><script type="text/template"><h2>Round-trip 3a</h2> <img src="negentropy-flow5.svg" style="background-color: white; width: 600px;" /> </script></section>
+<section data-markdown><script type="text/template"><h2>Round-trip 3b</h2> <img src="negentropy-flow6.svg" style="background-color: white; width: 600px;" /> </script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## Optimisations
+
+* Previous example was just for explanation
+* Small ranges just have their list of IDs sent
+* Ranges are split more aggressively, into 16 pieces, not 2
 
 </script></section>
 
 
 
+<section data-markdown><script type="text/template">
 
+* If we were binary searching 1 million elements, we'd expect about 20 round-trips:
+      log(1e6)/log(2) = 19.9316
+* But when splitting into 16:
+      log(1e6)/log(16) = 4.98289
+* Because splitting happens in both directions:
+      log(1e6)/log(16)/2 = 2.49145
+* Syncing two DBs of 1 million elements that differ by 1 element takes 2 or 3 round-trips
+  * About 900 bytes up and 600 bytes down
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## Usage
+
+* Single-header library:
+
+      #include "Negentropy.h"
+
+* Create `Negentropy` object, add your elements, and seal:
+
+      Negentropy ne(16); // 16 is ID size
+
+      for (const auto &item : myItems) {
+          ne.addItem(item.timestamp(), item.id());
+      }
+
+      ne.seal();
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## Client-side:
+
+    std::string msg = ne.initiate();
+
+    while (msg.size() != 0) {
+        std::string response = queryServer(msg);
+        std::vector<std::string> have, need;
+        msg = ne.reconcile(response, have, need);
+        // handle have/need
+    }
+
+## Server-side:
+
+    while (1) {
+        std::string msg = receiveMsgFromClient();
+        std::string response = ne.reconcile(msg);
+        respondToClient(response);
+    }
+
+</script></section>
 
 
 
