@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
 
-    <title>strfry: An efficient server for the Nostr protocol</title>
+    <title>strfry: An efficient server for the nostr protocol</title>
 
     <meta name="author" content="Doug Hoyte">
 
@@ -86,7 +86,7 @@
 
 ## strfry
 
-### An efficient server for the Nostr protocol
+### An efficient server for the nostr protocol
 
 <img style="border: none; background-color: white; padding: 50px" src="strfry.svg" />
 
@@ -110,10 +110,25 @@ In this talk I'll discuss the strfry architecture and implementation, as well as
 ## nostr
 
 * Notes and Other Stuff Transmitted by Relays
-* Simple JSON message format, cryptographically signed
-  * No blockchains or cryptocurrency
-* Relays are websocket servers where clients post their notes and read other people's notes
+  * Protocol for building Twitter/Reddit alternatives
+* JSON messages, cryptographically signed
+  * No blockchains/cryptocurrency
+* Relays are websocket servers where clients post their notes and download other people's notes
   * Clients typically use many relays for redundancy
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Why is nostr cool?
+
+* Honestly a grass-roots protocol
+  * No company behind it, no reference implementations, loose consensus drives everything, chaotic but fun
+* Many different clients to choose from: web/mobile/desktop/etc
+* Data portability: Easily change clients, move relays, backup your data
+* Not under control of entities like Facebook/Twitter/etc
 
 </script></section>
 
@@ -143,7 +158,7 @@ In this talk I'll discuss the strfry architecture and implementation, as well as
 
 <section data-markdown><script type="text/template">
 
-## Posting a nostr event
+## Posting an event
 
 * Connect to a relay's websocket, and send an `EVENT` message:
 
@@ -163,7 +178,7 @@ In this talk I'll discuss the strfry architecture and implementation, as well as
 
 ## Downloading events
 
-* Nostr relays index events so that the subset of events a client is interested in can be retrieved efficiently:
+* Relays index events so that the subset of events a client is interested in can be retrieved efficiently:
 * To download events, send a `REQ` message:
       ["REQ","a",<filters>]
   * `"a"` is a client-chosen subscription ID
@@ -327,6 +342,7 @@ Becomes:
   * Even if we only want one field
 * Better option: flatbuffers
   * Single fields can be rapidly extracted, without decoding whole record
+  * Fields are not packed (no decoding needed)
   * Zero-copy
 
 </script></section>
@@ -355,6 +371,71 @@ Becomes:
 ## mmap() flatbuffers
 
 <img src="arch-lmdb.svg" style="background-color: white;" />
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Uncompacted DB
+
+<img src="uncompacted.png" style="border: none" />
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## Compacted DB
+
+<img src="compacted.png" style="border: none" />
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Annotated
+
+<img src="compacted-annotated.png.svg" style="border: none" />
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Annotated 2
+
+<img src="compacted-annotated2.png.svg" style="border: none" />
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+<img src="ids-layout.png" style="border: none" />
+
+* Zoom in on ID index
+* Blue=keys (40 bytes), green=values (8 bytes)
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## Query pausing
+
+* strfry implements its own indexing, query planning, and execution
+* Increased complexity, but comes with advantages:
+  * nostr has fairly rigid queries, so a lot of SQL overhead not needed
+  * Queries can be paused and resumed later
+    * Useful for DoS protection, and fairness: long running queries can be deprioritised
 
 </script></section>
 
@@ -450,6 +531,54 @@ Becomes:
 
 <section data-markdown><script type="text/template">
 
+## Live config changes
+
+* Many config parameters can be changed without restarting strfry
+      std::atomic<ConfigValues*> currentCfg;
+* Uses `inotify()` to detect file changes, then atomically swaps a pointer to new config
+      // Atomically swap in new config:
+      ConfigValues *oldCfg = currentCfg.exchange(tmpCfg.release());
+
+      // Intentionally leak this memory!
+      // Threads may still have references to it.
+      (void)oldCfg;
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## REUSE_PORT
+
+* Cool linux kernel feature: `REUSE_PORT` socket option
+* Allows multiple processes to simultaneously accept connections on same port
+  * Kernel will load-balance connections between them
+* Uses:
+  * Spread load if `WebSocket` thread becomes a bottleneck
+  * Zero-downtime restarts
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Zero-Downtime Restarts
+
+* Changing some config params requires a restart. Also upgrading the `strfry` binary
+* This can be done with no service interruption:
+  * Run another relay instance
+  * Send `USR1` signal to old instance:
+        kill -USR1 $OLD_PID
+  * Old instance is now in graceful shutdown mode: Listening socket is closed, and will exit when last client closes connection
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
 ## Stream
 
 * Connects to a remote relay, issues a `REQ` and saves the events into the local DB:
@@ -460,12 +589,6 @@ Becomes:
 </script></section>
 
 
-
-<section data-markdown><script type="text/template">
-
-## Write Policy plugins
-
-</script></section>
 
 
 
@@ -493,7 +616,7 @@ Becomes:
 
 ## Set Reconcilliation
 
-* You could send the full set of events, or just their IDs
+* You could send the full set of events (or just IDs)
   * Consumes too much bandwidth
 * strfry uses range-based reconcilliation
   * Two sides alternate sending the XOR of the IDs within a particular range
@@ -513,9 +636,10 @@ Becomes:
 
 ## Optimisations
 
-* Previous example was just for explanation
+* Previous slides were illustrative
 * Small ranges just have their list of IDs sent
-* Ranges are split more aggressively, into 16 pieces, not 2
+* Ranges are split more aggressively
+  * 16 ranges, not 2
 
 </script></section>
 
@@ -525,7 +649,7 @@ Becomes:
 
 * If we were binary searching 1 million elements, we'd expect about 20 round-trips:
       log(1e6)/log(2) = 19.9316
-* But when splitting into 16:
+* But when splitting into 16 ranges:
       log(1e6)/log(16) = 4.98289
 * Because splitting happens in both directions:
       log(1e6)/log(16)/2 = 2.49145
@@ -537,7 +661,7 @@ Becomes:
 
 <section data-markdown><script type="text/template">
 
-## Usage
+## `Negentropy.h`
 
 * Single-header library:
 
@@ -580,6 +704,120 @@ Becomes:
 </script></section>
 
 
+
+
+<section data-markdown><script type="text/template">
+
+## Syncing
+
+* strfry uses negentropy to sync events between relays
+      strfry sync wss://some.relay.com
+* Even if relays are streaming, events can still get out of sync:
+  * Down-time, network disconnections
+  * Misconfigurations, disks full
+  * Bringing new servers into the mesh
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Geo-replication
+
+<img src="RelayableNostrRelays.png" style="border: none; width: 700px" />
+
+</script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## Write Policy plugins
+
+* Before sending to the `Writer` thread, strfry can call out to an external process to determine if it should be accepted
+* Plugins can be in any language: Just have to read JSON from stdin and write JSON to stdout
+* Plugins can accept, reject, or shadowReject
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Plugins
+
+* Community has made many plugins
+  * IP/pubkey rate limits
+  * Duplicate event spam detector
+  * Banning notes with certain words
+  * Prevent notes that tag too many participants (hell threads)
+  * Asking ChatGPT if it's spam
+  * Proof of work, paid relays
+  * Many more (see [Alex Gleason's repo](https://doc.deno.land/https://gitlab.com/soapbox-pub/strfry-policies/-/raw/develop/mod.ts))
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Compression
+
+* strfry supports websocket message compression
+  * Including "sliding window" that uses previous messages as compression context
+* Also supports dictionary compression of stored events using zstandard
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Compression in B-Trees vs LSMs
+
+* A criticism of LMDB is that it doesn't compress multiple records together
+* LevelDB (for example) compresses adjacent records together to take advantage of redundancy
+  * But who says adjacent records will have the most redundancy?
+* strfry lets you train dictionaries with arbitrary sets of records
+  * Records can be compressed with best dictionary, no matter what their primary key
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## zstd dicts
+
+* Create a dictionary by training it on events:
+      strfry dict train --filter '{"kinds":[0,3]}'
+* Compress a set of records using this dict:
+      strfry dict compress --filter '{"kinds":[0,3]}' --dictId 1
+* `strfry dict stats`
+      Num compressed: 519231 / 967250
+      Uncompressed size: 638.84M
+      Compressed size:   471.16M (26.2%)
+
+      dictId : events
+        1 : 104052
+        2 : 415179
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## Classification by Compression
+
+* Relay operators don't like to talk about their spam protections
+* But... one weird trick:
+  * Create a dictionary trained on flagged events
+  * Try compressing a candidate event
+  * If it compresses more than known-good events do, it's possibly spam
+
+</script></section>
 
 
 
