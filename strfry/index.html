@@ -101,6 +101,11 @@
 Nostr (Notes and Other Stuff Transmitted by Relays) is a simple, grass-roots protocol for publishing signed messages over websockets. It was created out of a desire to build Twitter and Reddit-like social networks with more client choice, data-portability, and not fully controlled by corporate entities. In January 2023 I published a C++ relay (server) named strfry, which has since been adopted by most of the high-traffic relays on the nostr network.
 
 In this talk I'll discuss the strfry architecture and implementation, as well as general techniques and tricks for creating efficient servers for OLTP work-loads. Additionally, we'll describe "negentropy": strfry's range-based set-reconcilliation protocol that can synchronise large remote databases using a small amount of bandwidth. Other topics include spam fighting, DDoS protection, geo-replication, dictionary-based record compression, zero-downtime upgrades, low-level virtual memory tuning with the Linux kernel, and generating HTML with C++.
+
+
+TODO:
+
+? first byte optimisation of filters
 -->
 
 
@@ -124,11 +129,22 @@ In this talk I'll discuss the strfry architecture and implementation, as well as
 
 ## Why is nostr cool?
 
-* Honestly a grass-roots protocol
-  * No company behind it, no reference implementations, loose consensus drives everything, chaotic but fun
 * Many different clients to choose from: web/mobile/desktop/etc
 * Data portability: Easily change clients, move relays, backup your data
 * Not under control of entities like Facebook/Twitter/etc
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## Community-driven
+
+* Grass-roots protocol (for real)
+  * No company behind it
+  * No reference implementations
+  * Loose consensus drives everything
+  * Chaotic but *fun*
 
 </script></section>
 
@@ -206,7 +222,7 @@ In this talk I'll discuss the strfry architecture and implementation, as well as
 
 ## Responses
 
-* `REQ`s are replied to 2 phases:
+* `REQ`s are replied to in 2 phases:
   * First: Relay sends events that were previously stored
   * Second: New events that come in are streamed to the client
 
@@ -268,9 +284,9 @@ Becomes:
 
 * Good:
   * Flexible: easy to iterate on different queries
-  * Well-tuned query planners available by default
+  * Well-tuned query planners available
 * Bad:
-  * Lots of overhead (create SQL string, send to DB, parse SQL, create query plan)
+  * Lots of overhead (create SQL string, send to DB, parse SQL string, create query plan)
   * Limited control over execution
 
 </script></section>
@@ -407,7 +423,7 @@ Becomes:
 
 <section data-markdown><script type="text/template">
 
-## Annotated 2
+## Zoom in
 
 <img src="compacted-annotated2.png.svg" style="border: none" />
 
@@ -433,7 +449,7 @@ Becomes:
 
 * strfry implements its own indexing, query planning, and execution
 * Increased complexity, but comes with advantages:
-  * nostr has fairly rigid queries, so a lot of SQL overhead not needed
+  * nostr has fairly basic queries, so a lot of SQL overhead not needed
   * Queries can be paused and resumed later
     * Useful for DoS protection, and fairness: long running queries can be deprioritised
 
@@ -553,7 +569,7 @@ Becomes:
 * Cool linux kernel feature: `REUSE_PORT` socket option
 * Allows multiple processes to simultaneously accept connections on same port
   * Kernel will load-balance connections between them
-* Uses:
+* Use cases:
   * Spread load if `WebSocket` thread becomes a bottleneck
   * Zero-downtime restarts
 
@@ -570,7 +586,7 @@ Becomes:
   * Run another relay instance
   * Send `USR1` signal to old instance:
         kill -USR1 $OLD_PID
-  * Old instance is now in graceful shutdown mode: Listening socket is closed, and will exit when last client closes connection
+  * Old instance is now in graceful shutdown mode: Listening socket is closed, and it will exit when last client closes connection
 
 </script></section>
 
@@ -751,7 +767,7 @@ Becomes:
 * Community has made many plugins
   * IP/pubkey rate limits
   * Duplicate event spam detector
-  * Banning notes with certain words
+  * Rejecting notes with certain words
   * Prevent notes that tag too many participants (hell threads)
   * Asking ChatGPT if it's spam
   * Proof of work, paid relays
@@ -775,13 +791,23 @@ Becomes:
 
 <section data-markdown><script type="text/template">
 
-## Compression in B-Trees vs LSMs
+## Compression: B-Trees vs LSMs
 
 * A criticism of LMDB is that it doesn't compress multiple records together
 * LevelDB (for example) compresses adjacent records together to take advantage of redundancy
-  * But who says adjacent records will have the most redundancy?
+  * But who says adjacent records will be the most similar?
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## Dictionaries
+
+* Zstandard dictionaries are pre-computed compression contexts
 * strfry lets you train dictionaries with arbitrary sets of records
   * Records can be compressed with best dictionary, no matter what their primary key
+* Dictionaries can be optimally pre-computed offline and uploaded to relays
 
 </script></section>
 
@@ -789,7 +815,7 @@ Becomes:
 
 <section data-markdown><script type="text/template">
 
-## zstd dicts
+## `strfry dict`
 
 * Create a dictionary by training it on events:
       strfry dict train --filter '{"kinds":[0,3]}'
@@ -811,14 +837,81 @@ Becomes:
 
 ## Classification by Compression
 
-* Relay operators don't like to talk about their spam protections
-* But... one weird trick:
-  * Create a dictionary trained on flagged events
+* Relay operators obviously don't like to talk about their spam fighting techniques
+* But... one WEIRD TRICK spammers HATE:
+  * Maintain dictionaries trained on flagged events (confirmed spam)
   * Try compressing a candidate event
-  * If it compresses more than known-good events do, it's possibly spam
+  * If it compresses better than known-good events, it's likely spam
+  * (tune dictionary size to reduce over-fitting)
 
 </script></section>
 
+
+
+<section data-markdown><script type="text/template">
+
+## Templar
+
+* HTML template system that compiles to C++ code (syntax inspired by [hypertextcpp](https://github.com/kamchatka-volcano/hypertextcpp))
+* Automatic HTML escaping to protect against XSS security bugs
+* Whitespace minification
+* React/JSX-style `<></>` fragments for grouping
+* Templates can call other templates
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## This template...
+
+    <div class="comments">
+        <h2>
+            Comments by $(ctx.username):
+        </h2>
+
+        <div> @(auto &c : ctx.comments)
+            $(c)
+        </div>
+    </div>
+
+</script></section>
+
+
+
+<section data-markdown><script type="text/template">
+
+## ... compiles to this C++
+
+    template<typename TCtx>
+    inline TemplarResult comments([[maybe_unused]]const TCtx &ctx) {
+        std::string out;
+        ::appendRaw(out, "<div class=\"comments\"> <h2> Comments by ");
+        ::appendEscape(out, (ctx.username), false);
+        ::appendRaw(out, ": </h2> ");
+        for (auto &c : ctx.comments) {
+            ::appendRaw(out, "<div> ");
+            ::appendEscape(out, (c), false);
+            ::appendRaw(out, " </div>");
+        }
+        ::appendRaw(out, " </div> ");
+        return TemplarResult{ std::move(out) };
+    }
+
+</script></section>
+
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## Coming soon: <a href="https://oddbean.com">oddbean.com</a>
+
+<img src="oddbean.png" style="border: none" />
+
+</script></section>
 
 
 
@@ -830,6 +923,10 @@ Becomes:
 ## Thank You!
 
 [github.com/hoytech/strfry](https://github.com/hoytech/strfry)
+
+[github.com/hoytech/negentropy](https://github.com/hoytech/negentropy)
+
+[github.com/hoytech/templar](https://github.com/hoytech/templar)
 
 [hoytech.github.io/presentations/strfry](https://hoytech.github.io/presentations/strfry)
 
