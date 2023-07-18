@@ -13,7 +13,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
 
     <link rel="stylesheet" href="../reveal.js/css/reveal.css">
-    <link rel="stylesheet" href="../reveal.js/css/theme/black.css" id="theme">
+    <link rel="stylesheet" href="../reveal.js/css/theme/white.css" id="theme">
 
     <!-- Code syntax highlighting -->
     <link rel="stylesheet" href="../reveal.js/lib/css/zenburn.css">
@@ -45,8 +45,12 @@
         margin: 20px;
       }
 
+      .reveal .slides img {
+        border: 0;
+        box-shadow: none;
+      }
+
       body .reveal .slides {
-        font-size: 90%;
       }
     </style>
   </head>
@@ -70,13 +74,11 @@ VE3HOY
 
 <section data-markdown><script type="text/template">
 
-# What are you talking about?
+## SDR
 
-* **SDR**: Stands for *Software-Defined Radio*. It is where raw-radio samples are processed by your computer with software, kind of like a "sound-card for radio data".
-
-* **RTL**: Short for *Realtek RTL2832U* and clones. A few years ago some hackers figured out these cheap chips used for digital TV dongles could be turned into SDR devices.
-
-
+* *Software-Defined Radio*
+* Raw-radio samples are processed by your computer with software
+* "sound-card for radio data"
 
 </script></section>
 
@@ -84,17 +86,20 @@ VE3HOY
 
 <section data-markdown><script type="text/template">
 
-# Open radio device
+## RTL
 
-      use Radio::RTLSDR;
+* Short for *Realtek RTL2832U* microchip (and clones)
+* Originally for digital TV dongles
+* Popular with radio hackers
 
-      my $freq = shift || 104.5;
-      $freq *= 1_000_000;
+</script></section>
 
-      my $rf_sample_rate = 2_000_000;
 
-      my $radio = Radio::RTLSDR->new(freq => $freq,
-                                     sample_rate => $rf_sample_rate);
+<section data-markdown><script type="text/template">
+
+25 Mhz-1.7 GHz, 2.5M samples/sec, ~$20
+
+<img src="rtlsdr.jpg" style="width:800px; border: none" />
 
 </script></section>
 
@@ -102,21 +107,11 @@ VE3HOY
 
 <section data-markdown><script type="text/template">
 
-# Open audio device
+### I/Q Sampling
 
-      my $audio_sample_rate = 50_000;
+<img src="iq.svg" style="background-color: white; width: 100%" />
 
-### sox
-
-      open(my $audio_sink,
-           '|-:raw',
-           "play -t raw -r $audio_sample_rate -e float -b 32 -c 1 -");
-
-### or pulse audio
-
-      open(my $audio_sink,
-           '|-:raw',
-           "pacat --stream-name fmrecv --format float32le --rate $audio_sample_rate --channels 1 --latency-msec 10");
+* Treat them as complex numbers
 
 </script></section>
 
@@ -124,82 +119,29 @@ VE3HOY
 
 <section data-markdown><script type="text/template">
 
-# Receive callback
+### Frequency is the derivative of phase
 
-      $radio->rx(sub {
-        # process raw radio samples in $_[0]
-        # this callback will be called several times per second...
-      });
+<img src="fmphase.svg" style="background-color: white; width: 100%" />
 
-      $radio->run; # enter event loop
-
-The rest of the code in this presentation lives inside this `rx` callback...
+* Amplitude of audio signal is encoded as frequency
+* Frequency is the change in phase
 
 </script></section>
 
 
-<section data-markdown><script type="text/template">
-
-# Prepare data
-
-      use PDL;
-
-      my $data = pdl()->convert(byte)->reshape(length($_[0]));
-
-      ${ $data->get_dataref } = $_[0];
-      $data->upd_data();
-
-      $data = $data->convert(float);
-
-      $data -= 128;
-      $data *= 1000000;
-
-      my $I = $data->slice([0,-1,2]);
-      my $Q = $data->slice([1,-1,2]);
-
-</script></section>
-
 
 <section data-markdown><script type="text/template">
 
-# RF filter
-
-      ## Decimate 4:1, 2000k -> 500k
-
-      $I = PDL::DSP::Fir::Simple::filter($I, { fc => 0.12, N => 81, });
-      $Q = PDL::DSP::Fir::Simple::filter($Q, { fc => 0.12, N => 81, });
-
-      $I = $I->slice([0,-1,4]);
-      $Q = $Q->slice([0,-1,4]);
-
-</script></section>
-
-
-<section data-markdown><script type="text/template">
-
-# FM demodulation
-
-      use PDL::Complex;
+## FM demodulation
 
       my $prev = $I->slice([0, -2]) + (i * $Q->slice([0, -2]));
       my $curr = $I->slice([1, -1]) + (i * $Q->slice([1, -1]));
 
-      my $deriv = ($prev->Cconj() * $curr)->Carg();
+      my $deriv = ($curr * $prev->Cconj())->Carg();
 
-      ## FIXME: retain previous values:
-      $deriv = $deriv->append($deriv->at(-1));
+<img src="fm-demod-deriv.svg" style="background-color: white" />
 
-</script></section>
-
-
-<section data-markdown><script type="text/template">
-
-# Audio filter
-
-      my $audio =
-        PDL::DSP::Fir::Simple::filter($deriv, { fc => 0.4, N => 32 });
-
-      $audio = $audio->slice([0,-1,10]);
+* Multiplying complex numbers adds their phase angles, complex conjugate is negation of phase
 
 </script></section>
 
@@ -207,18 +149,15 @@ The rest of the code in this presentation lives inside this `rx` callback...
 
 <section data-markdown><script type="text/template">
 
-# Send audio to speakers
+## Open audio device
 
-      print $audio_sink ${ $audio->convert(float)->get_dataref };
+    my $audio_sample_rate = 50_000;
 
-</script></section>
-
-
-<section data-markdown><script type="text/template">
-
-# So... how does it sound?
-
-      $ perl fmrecv.pl 104.5
+    open(
+      my $audio_sink,
+      '|-:raw',
+      "play -t raw -r $audio_sample_rate -e float -b 32 -c 1 -"
+    );
 
 </script></section>
 
@@ -226,15 +165,27 @@ The rest of the code in this presentation lives inside this `rx` callback...
 
 <section data-markdown><script type="text/template">
 
-# Questions/comments?
+## How does it sound?
 
-I'm designing a perl-based Software-Defined Radio toolkit, would love your help:
-
-https://github.com/hoytech/Radio-RTLSDR
-
-You can get an RTL-SDR for about $20 from http://www.nooelec.com
+    $ perl fmrecv.pl 96.3
 
 </script></section>
+
+
+
+
+<section data-markdown><script type="text/template">
+
+## GNU Radio (C++)
+
+<img src="gnu-radio.png" style="background-color: white" />
+
+</script></section>
+
+
+
+
+
 
 <!------------------------------------------------------->
 
